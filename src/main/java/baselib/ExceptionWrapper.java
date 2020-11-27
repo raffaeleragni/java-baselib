@@ -60,11 +60,11 @@ public final class ExceptionWrapper {
     }
   }
 
-  interface Wrapper {
+  public interface Wrapper {
     void call() throws Exception; //NOSONAR
   }
 
-  interface WrapperT<T> {
+  public interface WrapperT<T> {
     T call() throws Exception; //NOSONAR
   }
 }

@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -37,12 +38,13 @@ class JdbcInstanceTest {
   JdbcInstance instance;
 
   @BeforeEach
-  void setup() {
+  void setup() throws SQLException {
     var dbname = UUID.randomUUID().toString();
-    var connection = TestHelper.memoryDB(dbname);
-    createTables(connection);
-    insertData(connection);
-    instance = new JdbcInstance(() -> connection);
+    try (var connection = TestHelper.memoryDB(dbname)) {
+      createTables(connection);
+      insertData(connection);
+    }
+    instance = new JdbcInstance(() -> TestHelper.memoryDB(dbname));
   }
 
   @Test
@@ -70,6 +72,20 @@ class JdbcInstanceTest {
     assertThat(set.contains("test1"), is(true));
     assertThat(set.contains("test2"), is(true));
     assertThat(set.contains("test3"), is(true));
+  }
+
+  @Test
+  void testExecute() {
+    var rows = instance.execute("update test set name = 'test'", st -> {});
+    var set = new HashSet<String>();
+    instance.streamed(
+        "select name from test",
+        st -> {},
+        rs -> set.add(rs.getString("name")));
+
+    assertThat(rows, greaterThan(0));
+    assertThat(set.size(), is(1));
+    assertThat(set.contains("test"), is(true));
   }
 
   private void createTables(Connection connection) {

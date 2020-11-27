@@ -57,6 +57,34 @@ public final class JdbcInstance {
   }
 
   /**
+   * Executes a sql statement with no result.
+   * For example, update statements.
+   *
+   * Returns the number of modified rows, so that it can be used for
+   * optimistic locking statements and other statements requiring such
+   * information back.
+   *
+   * @param sql the sql statement to execute: supports positional parameters '?'
+   * @param paramSetter functional access to set statement parameters.
+   * @return the number of records being modified
+   */
+  public int execute(
+    final String sql,
+    final ExConsumer<PreparedStatement> paramSetter) {
+
+    return ex(() -> {
+      try (var connection = connectionSupplier.get()) {
+        try (var st = connection.prepareStatement(sql,
+                        ResultSet.TYPE_SCROLL_SENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY)) {
+          paramSetter.accept(st);
+          return st.executeUpdate();
+        }
+      }
+    });
+  }
+
+  /**
    * Executes the query using concur TYPE_SCROLL_SENSITIVE + CONCUR_READ_ONLY
    * (meanint it uses a cursor) and streams the result without either the db nor
    * the client caching the whole list in memory.
@@ -97,7 +125,7 @@ public final class JdbcInstance {
   }
 
   @FunctionalInterface
-  interface ExConsumer<T> {
+  public interface ExConsumer<T> {
     void accept(T t) throws Exception; //NOSONAR
   }
 }
