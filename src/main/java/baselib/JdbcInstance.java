@@ -72,6 +72,9 @@ public final class JdbcInstance {
     final String sql,
     final ExConsumer<PreparedStatement> paramSetter) {
 
+    Objects.requireNonNull(sql);
+    Objects.requireNonNull(paramSetter);
+
     return ex(() -> {
       try (var connection = connectionSupplier.get()) {
         try (var st = connection.prepareStatement(sql,
