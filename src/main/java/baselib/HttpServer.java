@@ -52,14 +52,14 @@ public final class HttpServer {
       final Map<String, Consumer<Context>> handlers) {
 
     this.port = serverPort;
-    this.server = ex(() ->
+    this.server = ex(() -> //NOSONAR
         com.sun.net.httpserver.HttpServer.create()); //NOSONAR
     Objects.requireNonNull(handlers.entrySet())
       .stream()
       .filter(e -> Objects.nonNull(e.getValue()))
       .forEach(e ->
         server.createContext(e.getKey(), exchange ->
-            wrapExchange(exchange, e.getValue()))
+            wrapExchange(e.getKey(), exchange, e.getValue()))
       );
   }
 
@@ -99,6 +99,27 @@ public final class HttpServer {
      * @param body A full string to be written into the response.
      */
     void response(String body);
+
+    /**
+     *
+     * @return the part of the path that was statically mapped to the handler.
+     *         differently than variablePath(), it returns only the prefix.
+     *         Example: if you map '/path' to a handler, but receive a request
+     *         with '/path/var1/var2' then the original mapped string only will
+     *         be returned, in this case '/path', regardless of the full request
+     *         url.
+     */
+    String mappedPath();
+
+    /**
+     *
+     * @return the variable part of the path.
+     *         Example: if you map '/path' to a handler, but receive a request
+     *         with '/path/var2/var3/' then the variable path is the part that
+     *         is extra in the request url from the original path. In this case
+     *         it will return with stripped leading/traling shash 'var2/var3'
+     */
+    String variablePath();
   }
 
   /**
@@ -118,10 +139,11 @@ public final class HttpServer {
   }
 
   private static void wrapExchange(
+      final String originalMappedPath,
       final HttpExchange exchange,
       final Consumer<Context> function) {
 
-    var ctx = new ContextImpl(exchange);
+    var ctx = new ContextImpl(originalMappedPath, exchange);
     try {
       function.accept(ctx);
     } catch (HttpStatus e) {
@@ -135,9 +157,14 @@ public final class HttpServer {
   private static class ContextImpl implements Context {
 
     private static final int HTTP_OK = 200;
+    private final String path;
     private final HttpExchange exchange;
 
-    ContextImpl(final HttpExchange httpExchange) {
+    ContextImpl(
+        final String originalMappedPath,
+        final HttpExchange httpExchange) {
+
+      this.path = originalMappedPath;
       this.exchange = httpExchange;
     }
 
@@ -149,6 +176,24 @@ public final class HttpServer {
           out.write(body);
         })
       );
+    }
+
+    @Override
+    public String mappedPath() {
+      return path;
+    }
+
+    @Override
+    public String variablePath() {
+      var variable = exchange
+          .getRequestURI()
+          .getPath()
+          .substring(path.length());
+      if (variable.startsWith("/"))
+        variable = variable.substring(1);
+      if (variable.endsWith("/"))
+        variable = variable.substring(0, variable.length() - 1);
+      return variable;
     }
 
     private void writer(final Consumer<BufferedWriter> writer) {

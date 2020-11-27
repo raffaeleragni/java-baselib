@@ -18,11 +18,12 @@ package baselib;
 import baselib.HttpServer.HttpStatus;
 import static baselib.TestHelper.portOccupied;
 import static baselib.TestHelper.requestGet;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,45 +33,71 @@ import org.junit.jupiter.api.Test;
 class HttpServerTest {
   private static final int PORT = 54321;
 
-  HttpServer server;
-
-  @BeforeEach
-  void setup() {
-    server = new HttpServer(PORT, Map.of());
-  }
-
   @Test
   void testServer() {
+    var server = new HttpServer(PORT, Map.of());
+
     assertThat(portOccupied(PORT), is(false));
-
-    server.start();
-    assertThat(portOccupied(PORT), is(true));
-
-    server.stop();
+    withServer(server, () -> {
+      assertThat(portOccupied(PORT), is(true));
+    });
     assertThat(portOccupied(PORT), is(false));
   }
 
   @Test
   void testSimpleBodyOutput() {
     var url = "http://localhost:"+PORT;
-    server = new HttpServer(PORT, Map.of(
+    var server = new HttpServer(PORT, Map.of(
       "/", ctx -> ctx.response("hello world"),
       "/exception", ctx -> {throw new RuntimeException();},
       "/500", ctx -> {throw new HttpStatus(500);}
     ));
+
+    withServer(server, () -> {
+      assertThat(requestGet(url+"/"), is("hello world"));
+
+      assertThrows(RuntimeException.class, () ->
+        requestGet(url+"/exception")
+      );
+
+      var status = assertThrows(HttpStatus.class, () ->
+        requestGet(url+"/500")
+      );
+      assertThat(status.status(), is(500));
+    });
+  }
+
+  @Test
+  void testPaths() {
+    var paths = new HashSet<String>();
+    var vars = new HashSet<String>();
+    var url = "http://localhost:"+PORT;
+    var server = new HttpServer(PORT, Map.of(
+      "/test", ctx -> {
+        paths.add(ctx.mappedPath());
+        vars.add(ctx.variablePath());
+        ctx.response("");
+      }
+    ));
+
+    withServer(server, () -> {
+      requestGet(url+"/test");
+      requestGet(url+"/test/v1");
+      requestGet(url+"/test/");
+      requestGet(url+"/test/v2/");
+      requestGet(url+"/test/v3/v2/v4/");
+
+      assertThat(paths, is(Set.of("/test")));
+      assertThat(vars, is(Set.of("", "v1", "v2", "v3/v2/v4")));
+    });
+  }
+
+  void withServer(HttpServer server, Runnable runnable) {
     server.start();
-
-    assertThat(requestGet(url+"/"), is("hello world"));
-
-    assertThrows(RuntimeException.class, () ->
-      requestGet(url+"/exception")
-    );
-
-    var status = assertThrows(HttpStatus.class, () ->
-      requestGet(url+"/500")
-    );
-    assertThat(status.status(), is(500));
-
-    server.stop();
+    try {
+      runnable.run();
+    } finally {
+      server.stop();
+    }
   }
 }
