@@ -158,6 +158,7 @@ public final class HttpServer {
 
     private static final int HTTP_OK = 200;
     private final String path;
+    private final String variablePath;
     private final HttpExchange exchange;
 
     ContextImpl(
@@ -166,6 +167,15 @@ public final class HttpServer {
 
       this.path = originalMappedPath;
       this.exchange = httpExchange;
+      var extraPath = exchange
+          .getRequestURI()
+          .getPath()
+          .substring(path.length());
+      if (extraPath.startsWith("/"))
+        extraPath = extraPath.substring(1);
+      if (extraPath.endsWith("/"))
+        extraPath = extraPath.substring(0, extraPath.length() - 1);
+      this.variablePath = extraPath;
     }
 
     @Override
@@ -185,15 +195,7 @@ public final class HttpServer {
 
     @Override
     public String variablePath() {
-      var variable = exchange
-          .getRequestURI()
-          .getPath()
-          .substring(path.length());
-      if (variable.startsWith("/"))
-        variable = variable.substring(1);
-      if (variable.endsWith("/"))
-        variable = variable.substring(0, variable.length() - 1);
-      return variable;
+      return variablePath;
     }
 
     private void writer(final Consumer<BufferedWriter> writer) {
