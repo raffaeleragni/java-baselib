@@ -32,6 +32,7 @@ import static baselib.ExceptionWrapper.ex;
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 public final class HttpServer {
+  private static final int HTTP_OK = 200;
   private final int port;
   private final com.sun.net.httpserver.HttpServer server; //NOSONAR
 
@@ -146,6 +147,12 @@ public final class HttpServer {
     var ctx = new ContextImpl(originalMappedPath, exchange);
     try {
       function.accept(ctx);
+
+      if (!ctx.responseSent())
+        ex(() -> {
+          exchange.sendResponseHeaders(HTTP_OK, 0);
+          exchange.getResponseBody().close();
+        });
     } catch (HttpStatus e) {
       ex(() -> {
         exchange.sendResponseHeaders(e.status(), 0);
@@ -156,10 +163,10 @@ public final class HttpServer {
 
   private static class ContextImpl implements Context {
 
-    private static final int HTTP_OK = 200;
     private final String path;
     private final String variablePath;
     private final HttpExchange exchange;
+    private boolean responseSent;
 
     ContextImpl(
         final String originalMappedPath,
@@ -176,6 +183,7 @@ public final class HttpServer {
       if (extraPath.endsWith("/"))
         extraPath = extraPath.substring(0, extraPath.length() - 1);
       this.variablePath = extraPath;
+      this.responseSent = false;
     }
 
     @Override
@@ -184,6 +192,7 @@ public final class HttpServer {
         ex(() -> {
           exchange.sendResponseHeaders(HTTP_OK, body.length());
           out.write(body);
+          responseSent = true;
         })
       );
     }
@@ -196,6 +205,10 @@ public final class HttpServer {
     @Override
     public String variablePath() {
       return variablePath;
+    }
+
+    boolean responseSent() {
+      return responseSent;
     }
 
     private void writer(final Consumer<BufferedWriter> writer) {

@@ -50,11 +50,14 @@ class HttpServerTest {
     var server = new HttpServer(PORT, Map.of(
       "/", ctx -> ctx.response("hello world"),
       "/exception", ctx -> {throw new RuntimeException();},
-      "/500", ctx -> {throw new HttpStatus(500);}
+      "/500", ctx -> {throw new HttpStatus(500);},
+      "/nooutput", ctx -> {}
     ));
 
     withServer(server, () -> {
       assertThat(requestGet(url+"/"), is("hello world"));
+
+      assertThat(requestGet(url+"/nooutput"), is(""));
 
       assertThrows(RuntimeException.class, () ->
         requestGet(url+"/exception")
