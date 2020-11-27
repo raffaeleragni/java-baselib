@@ -21,7 +21,6 @@ import baselib.ExceptionWrapper.WrapperT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static baselib.ExceptionWrapper.ex;
 
@@ -30,12 +29,6 @@ import static baselib.ExceptionWrapper.ex;
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 class ExceptionWrapperTest {
-  ExceptionWrapper wrapper;
-
-  @BeforeEach
-  void setup() {
-    wrapper = new ExceptionWrapper();
-  }
 
   @Test
   void testNoThrows() {

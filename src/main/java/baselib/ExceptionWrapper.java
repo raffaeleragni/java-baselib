@@ -20,9 +20,21 @@ package baselib;
  * Wraps checked exceptions into a lambda.
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
-public class ExceptionWrapper {
+public final class ExceptionWrapper {
 
-  public static <T> T ex(WrapperT<T> callable) {
+  private ExceptionWrapper() {
+  }
+
+  /**
+   * Wraps checked exceptions into IllegalStateException.
+   * This is the case of a callable that returns a value, the value is also
+   * returned by this function.
+   *
+   * @param <T> type for a return function
+   * @param callable the function to be wrapped, that throws checked exceptions
+   * @return the return value that the callable function returns
+   */
+  public static <T> T ex(final WrapperT<T> callable) {
     try {
       return callable.call();
     } catch (RuntimeException ex) {
@@ -32,7 +44,13 @@ public class ExceptionWrapper {
     }
   }
 
-  public static void ex(Wrapper callable) {
+  /**
+   * Wraps checked exceptions into IllegalStateException.
+   * This is the case of a function that has no return value.
+   *
+   * @param callable the function to be wrapped, that throws checked exceptions
+   */
+  public static void ex(final Wrapper callable) {
     try {
       callable.call();
     } catch (RuntimeException ex) {
@@ -42,11 +60,11 @@ public class ExceptionWrapper {
     }
   }
 
-  public interface Wrapper {
-    void call() throws Exception;//NOSONAR
+  interface Wrapper {
+    void call() throws Exception; //NOSONAR
   }
 
-  public interface WrapperT<T> {
-    T call() throws Exception;//NOSONAR
+  interface WrapperT<T> {
+    T call() throws Exception; //NOSONAR
   }
 }

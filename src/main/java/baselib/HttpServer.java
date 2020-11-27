@@ -15,7 +15,7 @@
  */
 package baselib;
 
-import com.sun.net.httpserver.HttpExchange;//NOSONAR
+import com.sun.net.httpserver.HttpExchange; //NOSONAR
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
@@ -31,28 +31,35 @@ import static baselib.ExceptionWrapper.ex;
  *
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
-public class HttpServer {
+public final class HttpServer {
   private final int port;
-  private final com.sun.net.httpserver.HttpServer server;//NOSONAR
+  private final com.sun.net.httpserver.HttpServer server; //NOSONAR
 
   /**
    * Create a new server.
    * The server is not started yet, for that call the start().
-   * The server will bind to the specified port, but without binding to any specific interface.
+   * The server will bind to the specified port, but without binding to any
+   * specific interface.
    * This means that it will listen to 0.0.0.0 for this current implementation.
    * Future implementations may extend that feature.
    *
-   * @param port the port that the server will bind to.
-   * @param handlers the http handlers to be mapped: key is the uri and value is the lambda that is executed on that uri
+   * @param serverPort the port that the server will bind to.
+   * @param handlers the http handlers to be mapped: key is the uri and value is
+   *                 the lambda that is executed on that uri
    */
-  public HttpServer(int port, Map<String, Consumer<Context>> handlers) {
-    this.port = port;
-    this.server = ex(() -> com.sun.net.httpserver.HttpServer.create());//NOSONAR
+  public HttpServer(
+      final int serverPort,
+      final Map<String, Consumer<Context>> handlers) {
+
+    this.port = serverPort;
+    this.server = ex(() ->
+        com.sun.net.httpserver.HttpServer.create()); //NOSONAR
     Objects.requireNonNull(handlers.entrySet())
       .stream()
       .filter(e -> Objects.nonNull(e.getValue()))
       .forEach(e ->
-        server.createContext(e.getKey(), exchange -> wrapExchange(exchange, e.getValue()))
+        server.createContext(e.getKey(), exchange ->
+            wrapExchange(exchange, e.getValue()))
       );
   }
 
@@ -69,7 +76,8 @@ public class HttpServer {
 
   /**
    * Stops the server.
-   * The server will be stopped abruptly and without waiting for requests to be finished.
+   * The server will be stopped abruptly and without waiting for requests
+   * to be finished.
    * Future implementation may add an option for a wait time.
    *
    * Once stopped, this instance of server cannot be reused.
@@ -86,18 +94,22 @@ public class HttpServer {
 
     /**
      * Write a string as a response.
-     * After this function the response will be in status 200 and the output will be closed, ending the response.
+     * After this function the response will be in status 200 and the output
+     * will be closed, ending the response.
      * @param body A full string to be written into the response.
      */
     void response(String body);
   }
 
-  public static class HttpStatus extends RuntimeException {
+  /**
+   * Exception used to map http return values for status codes.
+   */
+  public static final class HttpStatus extends RuntimeException {
     private final int status;
 
-    public HttpStatus(int status) {
+    public HttpStatus(final int httpStatus) {
       super();
-      this.status = status;
+      this.status = httpStatus;
     }
 
     public int status() {
@@ -105,7 +117,10 @@ public class HttpServer {
     }
   }
 
-  private static void wrapExchange(HttpExchange exchange, Consumer<Context> function) {
+  private static void wrapExchange(
+      final HttpExchange exchange,
+      final Consumer<Context> function) {
+
     var ctx = new ContextImpl(exchange);
     try {
       function.accept(ctx);
@@ -118,24 +133,28 @@ public class HttpServer {
   }
 
   private static class ContextImpl implements Context {
-    final HttpExchange exchange;
-    ContextImpl(HttpExchange exchange) {
-      this.exchange = exchange;
+
+    private static final int HTTP_OK = 200;
+    private final HttpExchange exchange;
+
+    ContextImpl(final HttpExchange httpExchange) {
+      this.exchange = httpExchange;
     }
 
     @Override
-    public void response(String body) {
+    public void response(final String body) {
       writer(out ->
         ex(() -> {
-          exchange.sendResponseHeaders(200, body.length());
+          exchange.sendResponseHeaders(HTTP_OK, body.length());
           out.write(body);
         })
       );
     }
 
-    private void writer(Consumer<BufferedWriter> writer) {
+    private void writer(final Consumer<BufferedWriter> writer) {
       ex(() -> {
-        try (var out = new BufferedWriter(new OutputStreamWriter(exchange.getResponseBody(), UTF_8))) {
+        try (var out = new BufferedWriter(
+            new OutputStreamWriter(exchange.getResponseBody(), UTF_8))) {
           writer.accept(out);
         }
       });
