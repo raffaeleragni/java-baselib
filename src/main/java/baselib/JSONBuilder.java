@@ -123,6 +123,8 @@ public final class JSONBuilder {
   private void doRecord(Object o) {
     beginObject();
     for (var e: o.getClass().getRecordComponents()) {
+      if (!e.getAccessor().canAccess(o))
+        continue;
       property(e.getName());
       ex(() -> value(e.getAccessor().invoke(o)));
     }
