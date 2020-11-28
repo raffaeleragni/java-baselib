@@ -28,11 +28,10 @@ import java.time.Duration;
  */
 public final class HttpClient {
 
-  private static final int HTTP_NOK = 400;
   private HttpClient() {
   }
 
-  public static String get(final String url) {
+  public static HttpResponse<String> get(final String url) {
     return ex(() -> {
       var client = java.net.http.HttpClient.newBuilder()
           .connectTimeout(Duration.ofSeconds(1))
@@ -40,11 +39,7 @@ public final class HttpClient {
       HttpRequest request = HttpRequest.newBuilder()
           .uri(URI.create(url))
           .build();
-      var resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-      if (resp.statusCode() >= HTTP_NOK)
-        throw new HttpServer.HttpStatus(resp.statusCode());
-
-      return resp.body();
+      return client.send(request, HttpResponse.BodyHandlers.ofString());
     });
   }
 }

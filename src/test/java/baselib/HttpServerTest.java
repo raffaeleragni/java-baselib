@@ -55,18 +55,15 @@ class HttpServerTest {
     ));
 
     withServer(server, () -> {
-      assertThat(get(url+"/"), is("hello world"));
+      assertThat(get(url+"/").body(), is("hello world"));
 
-      assertThat(get(url+"/nooutput"), is(""));
+      assertThat(get(url+"/nooutput").body(), is(""));
 
       assertThrows(RuntimeException.class, () ->
         get(url+"/exception")
       );
 
-      var status = assertThrows(HttpStatus.class, () ->
-        get(url+"/500")
-      );
-      assertThat(status.status(), is(500));
+      assertThat(get(url+"/500").statusCode(), is(500));
     });
   }
 
