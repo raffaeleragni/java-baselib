@@ -17,6 +17,8 @@
 package baselib;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,5 +137,17 @@ class JSONBuilderTest {
     var snow = now.toString();
     jb.value(now);
     assertThat(jb.toString(), is('"' + snow + '"'));
+  }
+
+  @Test
+  void testList() {
+    jb.value(List.of(1, 2, 3));
+    assertThat(jb.toString(), is("[1,2,3]"));
+  }
+
+  @Test
+  void testMap() {
+    jb.value(Map.of("test", "asd"));
+    assertThat(jb.toString(), is("{\"test\":\"asd\"}"));
   }
 }

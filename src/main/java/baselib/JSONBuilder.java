@@ -16,6 +16,8 @@
 
 package baselib;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -94,6 +96,10 @@ public final class JSONBuilder {
       sb.append(n.toString());
     } else if (o instanceof Boolean b) {
       sb.append(b.toString());
+    } else if (o instanceof Map m) {
+      doMap(m);
+    } else if (o instanceof Collection c) {
+      doCollection(c);
     } else {
       sb.append('"');
       sanitizeAppend(o.toString());
@@ -102,6 +108,21 @@ public final class JSONBuilder {
 
     comma = true;
     prop = false;
+  }
+
+  private void doCollection(Collection<?> c) {
+    beginArray();
+    c.forEach(this::value);
+    endArray();
+  }
+
+  private void doMap(Map<?,?> m) {
+    beginObject();
+    m.entrySet().forEach(e -> {
+      property(e.getKey().toString());
+      value(e.getValue());
+    });
+    endObject();
   }
 
   private void sanitizeAppend(final String s) {
