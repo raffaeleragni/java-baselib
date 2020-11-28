@@ -168,4 +168,12 @@ class JSONBuilderTest {
   void testObjectArray() {
     assertThat(toJSON(new Character[]{'a', 'b', 'c'}), is("[\"a\",\"b\",\"c\"]"));
   }
+
+  @Test
+  void testRecord() {
+    var rec = new My(1, "c", Map.of("a", "b"));
+    assertThat(toJSON(rec), is("{\"x\":1,\"a\":\"c\",\"map\":{\"a\":\"b\"}}"));
+  }
 }
+
+record My(int x, String a, Map<String, String> map) {}

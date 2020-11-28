@@ -16,6 +16,7 @@
 
 package baselib;
 
+import static baselib.ExceptionWrapper.ex;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
@@ -109,6 +110,8 @@ public final class JSONBuilder {
       doCollection(c);
     } else if (o.getClass().isArray()) {
       doArray(o);
+    } else if (o.getClass().isRecord()) {
+      doRecord(o);
     } else {
       doString(o.toString());
     }
@@ -117,7 +120,16 @@ public final class JSONBuilder {
     prop = false;
   }
 
-  private void doLiteral(Object o){
+  private void doRecord(Object o) {
+    beginObject();
+    for (var e: o.getClass().getRecordComponents()) {
+      property(e.getName());
+      ex(() -> value(e.getAccessor().invoke(o)));
+    }
+    endObject();
+  }
+
+  private void doLiteral(Object o) {
     sb.append(o.toString());
   }
 
