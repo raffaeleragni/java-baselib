@@ -35,7 +35,7 @@ class HttpServerTest {
 
   @Test
   void testServer() {
-    var server = new HttpServer(PORT, Map.of());
+    var server = HttpServer.create(PORT, Map.of());
 
     assertThat(portOccupied(PORT), is(false));
     withServer(server, () -> {
@@ -47,7 +47,7 @@ class HttpServerTest {
   @Test
   void testSimpleBodyOutput() {
     var url = "http://localhost:"+PORT;
-    var server = new HttpServer(PORT, Map.of(
+    var server = HttpServer.create(PORT, Map.of(
       "/", ctx -> ctx.response("hello world"),
       "/exception", ctx -> {throw new RuntimeException();},
       "/500", ctx -> {throw new HttpStatus(500);},
@@ -72,7 +72,7 @@ class HttpServerTest {
     var paths = new HashSet<String>();
     var vars = new HashSet<String>();
     var url = "http://localhost:"+PORT;
-    var server = new HttpServer(PORT, Map.of(
+    var server = HttpServer.create(PORT, Map.of(
       "/test", ctx -> {
         paths.add(ctx.mappedPath());
         vars.add(ctx.variablePath());
@@ -89,6 +89,18 @@ class HttpServerTest {
 
       assertThat(paths, is(Set.of("/test")));
       assertThat(vars, is(Set.of("", "v1", "v2", "v3/v2/v4")));
+    });
+  }
+
+  @Test
+  void testStringProducer() {
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, HttpServer.of(Map.of(
+      "/test", () -> "test"
+    )));
+
+    withServer(server, () -> {
+      assertThat(get(url+"/test").body(), is("test"));
     });
   }
 

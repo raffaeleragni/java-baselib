@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import static baselib.ExceptionWrapper.ex;
+import java.util.HashMap;
+import java.util.function.Supplier;
 
 /**
  * Creates a simple http server with basic url mappings.
@@ -36,19 +38,7 @@ public final class HttpServer {
   private final int port;
   private final com.sun.net.httpserver.HttpServer server; //NOSONAR
 
-  /**
-   * Create a new server.
-   * The server is not started yet, for that call the start().
-   * The server will bind to the specified port, but without binding to any
-   * specific interface.
-   * This means that it will listen to 0.0.0.0 for this current implementation.
-   * Future implementations may extend that feature.
-   *
-   * @param serverPort the port that the server will bind to.
-   * @param handlers the http handlers to be mapped: key is the uri and value is
-   *                 the lambda that is executed on that uri
-   */
-  public HttpServer(
+  private HttpServer(
       final int serverPort,
       final Map<String, Consumer<Context>> handlers) {
 
@@ -62,6 +52,40 @@ public final class HttpServer {
         server.createContext(e.getKey(), exchange ->
             wrapExchange(e.getKey(), exchange, e.getValue()))
       );
+  }
+
+  /**
+   * Create a new server.
+   * The server is not started yet, for that call the start().
+   * The server will bind to the specified port, but without binding to any
+   * specific interface.
+   * This means that it will listen to 0.0.0.0 for this current implementation.
+   * Future implementations may extend that feature.
+   *
+   * @param serverPort the port that the server will bind to.
+   * @param handlers the http handlers to be mapped: key is the uri and value is
+   *                 the lambda that is executed on that uri
+   * @return
+   */
+  public static HttpServer create(final int serverPort,
+      final Map<String, Consumer<Context>> handlers) {
+    return new HttpServer(serverPort, handlers);
+  }
+
+  /**
+   * Convert straight output string providers into http handlers.
+   * @param providers provider maps, url: () -> "result"
+   * @return a new map converted into http handlers
+   */
+  public static Map<String, Consumer<Context>> of(
+      final Map<String, Supplier<String>> providers) {
+
+    var result = new HashMap<String, Consumer<Context>>();
+    providers.entrySet()
+        .forEach(e ->
+            result.put(e.getKey(), ctx ->
+                ctx.response(e.getValue().get())));
+    return result;
   }
 
   /**
