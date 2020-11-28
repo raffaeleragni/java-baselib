@@ -174,6 +174,15 @@ class JSONBuilderTest {
     var rec = new My(1, "c", Map.of("a", "b"));
     assertThat(toJSON(rec), is("{\"x\":1,\"a\":\"c\",\"map\":{\"a\":\"b\"}}"));
   }
+
+  @Test
+  void testMultiRecord() {
+    var rec = new Composed(2, new Comp1(1, "a"));
+    assertThat(toJSON(rec), is("{\"id\":2,\"cp\":{\"id\":1,\"name\":\"a\"}}"));
+  }
 }
 
 record My(int x, String a, Map<String, String> map) {}
+
+record Comp1(int id, String name) {}
+record Composed(int id, Comp1 cp) {}
