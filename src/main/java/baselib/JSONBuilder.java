@@ -35,6 +35,12 @@ public final class JSONBuilder {
     this.sb = new StringBuilder();
   }
 
+  public static String toJSON(Object value) {
+    var jb = new JSONBuilder();
+    jb.value(value);
+    return jb.toString();
+  }
+
   @Override
   public String toString() {
     return sb.toString();

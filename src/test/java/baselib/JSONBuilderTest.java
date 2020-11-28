@@ -16,6 +16,7 @@
 
 package baselib;
 
+import static baselib.JSONBuilder.toJSON;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -165,7 +166,6 @@ class JSONBuilderTest {
 
   @Test
   void testObjectArray() {
-    jb.value(new Character[]{'a', 'b', 'c'});
-    assertThat(jb.toString(), is("[\"a\",\"b\",\"c\"]"));
+    assertThat(toJSON(new Character[]{'a', 'b', 'c'}), is("[\"a\",\"b\",\"c\"]"));
   }
 }
