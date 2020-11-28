@@ -66,6 +66,11 @@ class JdbcInstanceTest {
   }
 
   @Test
+  void testDefaultClient() {
+    assertThrows(IllegalStateException.class, () -> JdbcInstance.defaultClient().healthCheck());
+  }
+
+  @Test
   void testStreamedSelect() {
     var set = new HashSet<String>();
     instance.streamed(
@@ -123,6 +128,15 @@ class JdbcInstanceTest {
         rs -> set.add(mapper.map(rs)));
 
     assertThat(set, hasItem(new Table("test1")));
+  }
+
+  @Test
+  void testRecordSelector() {
+    var mapper = JdbcInstance.<Table>mapperOfRecord(Table.class);
+    var set = new HashSet<>();
+    var selector = instance.makeRecordSelector(Table.class, "select * from test", st -> {});
+
+    assertThat(selector.get(), hasItem(new Table("test1")));
   }
 
   private void createTables(Connection connection) {

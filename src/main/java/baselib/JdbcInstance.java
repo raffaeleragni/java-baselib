@@ -16,12 +16,15 @@
 
 package baselib;
 
+import static baselib.ExceptionWrapper.ex;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Objects;
 import java.util.function.Supplier;
-import static baselib.ExceptionWrapper.ex;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * An object that wraps around a jdbc 'instance'.
@@ -43,6 +46,19 @@ public final class JdbcInstance {
    */
   public JdbcInstance(final Supplier<Connection> supplier) {
     this.connectionSupplier = Objects.requireNonNull(supplier);
+  }
+
+  /**
+   *
+   * @return a default jdbc instance: this will read jdbc url, user and password
+   *         from environment variables: JDBC_URL, JDBC_USER, JDBC_PASSWORD
+   */
+  public static JdbcInstance defaultClient() {
+    return new JdbcInstance(() -> ex(() -> DriverManager.getConnection(
+      System.getenv("JDBC_URL"),
+      System.getenv("JDBC_USER"),
+      System.getenv("JDBC_PASSWORD")
+    )));
   }
 
   /**
@@ -125,6 +141,28 @@ public final class JdbcInstance {
         }
       }
     });
+  }
+
+  /**
+   * Handy function to make a lambda selector for a select result of java
+   * records.
+   * @param <T> java record type
+   * @param clazz class of the java record type. must match, must be a java
+   *              record class
+   * @param sql statement to execute, supports positional parameters.
+   * @param paramSetter setter for positional parameters on statement object.
+   * @return a lambda that once executed will return a list of the records.
+   */
+  public <T> Supplier<List<T>> makeRecordSelector(
+      Class<T> clazz,
+      String sql,
+      final ExConsumer<PreparedStatement> paramSetter) {
+    var mapper = mapperOfRecord(clazz);
+    return () -> {
+      var list = new LinkedList<T>();
+      streamed(sql, paramSetter, rs -> list.add(mapper.map(rs)));
+      return list;
+    };
   }
 
   public static <T> RecordMapper<T> mapperOfRecord(Class<T> clazz) {
