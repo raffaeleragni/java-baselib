@@ -89,18 +89,14 @@ public final class JSONBuilder {
 
     if (o == null) {
       sb.append("null");
-    } else if (o instanceof String s) {
-      sb.append('"');
-      sanitizeAppend(s);
-      sb.append('"');
-    } else if (o instanceof Character c) {
-      sb.append('"');
-      sanitizeAppend(""+c);
-      sb.append('"');
-    } else if (o instanceof Number n) {
-      sb.append(n.toString());
-    } else if (o instanceof Boolean b) {
-      sb.append(b.toString());
+    } else if (o instanceof String) {
+      doString(o.toString());
+    } else if (o instanceof Character) {
+      doString(o.toString());
+    } else if (o instanceof Number) {
+      doLiteral(o);
+    } else if (o instanceof Boolean) {
+      doLiteral(o);
     } else if (o instanceof Map m) {
       doMap(m);
     } else if (o instanceof Collection c) {
@@ -108,13 +104,21 @@ public final class JSONBuilder {
     } else if (o.getClass().isArray()) {
       doArray(o);
     } else {
-      sb.append('"');
-      sanitizeAppend(o.toString());
-      sb.append('"');
+      doString(o.toString());
     }
 
     comma = true;
     prop = false;
+  }
+
+  private void doLiteral(Object o){
+    sb.append(o.toString());
+  }
+
+  private void doString(String s) {
+    sb.append('"');
+    sanitizeAppend(s);
+    sb.append('"');
   }
 
   private void doArray(Object o) {

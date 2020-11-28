@@ -158,7 +158,7 @@ class JSONBuilderTest {
   }
 
   @Test
-  void testnativeCharrray() {
+  void testNativeCharArray() {
     jb.value(new char[]{'a', 'b', 'c'});
     assertThat(jb.toString(), is("[\"a\",\"b\",\"c\"]"));
   }
