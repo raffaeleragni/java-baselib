@@ -16,8 +16,10 @@
 
 package baselib;
 
+import static baselib.Records.fromMap;
 import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,24 @@ class RecordsTest {
     var nest = new Nested(true, rec);
     var map = Records.toMap(nest);
     assertThat(map, is(Map.of("visible", true, "sample", Map.of("id", 1, "name", "test"))));
+  }
+
+  @Test
+  void testToRecordFromNull() {
+    var rec = fromMap(Sample.class, null);
+    assertThat(rec, is(nullValue()));
+  }
+
+  @Test
+  void testToNotRecord() {
+    assertThrows(IllegalArgumentException.class, () -> fromMap(Object.class, Map.of()));
+  }
+
+  @Test
+  void testToRecord() {
+    var rec = Records.fromMap(Sample.class, Map.of("id", 1, "name", "test"));
+    var expected = new Sample(1, "test");
+    assertThat(rec, is(expected));
   }
 }
 

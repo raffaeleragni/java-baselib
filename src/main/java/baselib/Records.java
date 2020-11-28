@@ -18,8 +18,10 @@ package baselib;
 
 import static baselib.ExceptionWrapper.ex;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  *
@@ -49,4 +51,27 @@ public final class Records {
     return result;
   }
 
+  public static <T> T fromMap(Class<T> clazz, Map<String, Object> map) {
+    if (map == null)
+      return null;
+    return fromPropertyDiscover(clazz, map::get);
+  }
+
+  public static <T> T fromPropertyDiscover(Class<T> clazz, Function<String, Object> fetch) {
+    if (fetch == null)
+      return null;
+    if (!clazz.isRecord())
+      throw new IllegalArgumentException();
+
+    var params = new LinkedList<Object>();
+    var types = new LinkedList<Class<?>>();
+    for (var e: clazz.getRecordComponents()) {
+      types.add(e.getType());
+      params.add(fetch.apply(e.getName()));
+    }
+
+    var constructor = ex(() -> clazz.getDeclaredConstructor(types.toArray(new Class[]{})));
+
+    return ex(() -> constructor.newInstance(params.toArray()));
+  }
 }

@@ -127,8 +127,32 @@ public final class JdbcInstance {
     });
   }
 
+  public static <T> RecordMapper<T> mapperOfRecord(Class<T> clazz) {
+    return new RecordMapperImpl<>(clazz);
+  }
+
   @FunctionalInterface
   public interface ExConsumer<T> {
     void accept(T t) throws Exception; //NOSONAR
+  }
+
+  @FunctionalInterface
+  public interface RecordMapper<T> {
+    T map(ResultSet rs);
+  }
+
+  private static class RecordMapperImpl<T> implements RecordMapper<T> {
+    private final Class<T> clazz;
+
+    public RecordMapperImpl(Class<T> clazz) {
+      if (!clazz.isRecord())
+        throw new IllegalArgumentException("works only with record classes");
+      this.clazz = clazz;
+    }
+
+    @Override
+    public T map(ResultSet rs) {
+      return Records.fromPropertyDiscover(clazz, name -> ex(() -> rs.getObject(name)));
+    }
   }
 }

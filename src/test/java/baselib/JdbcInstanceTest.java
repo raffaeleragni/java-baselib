@@ -18,12 +18,16 @@ package baselib;
 
 import static baselib.TestHelper.sql;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.UUID;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -88,6 +92,39 @@ class JdbcInstanceTest {
     assertThat(set.contains("test"), is(true));
   }
 
+  @Test
+  void testRecordMapperForNoRecord() {
+    assertThrows(IllegalArgumentException.class, () -> JdbcInstance.<Object>mapperOfRecord(Object.class));
+  }
+
+  @Test
+  void testRecordMapper() throws SQLException {
+    var mapper = JdbcInstance.<Rec>mapperOfRecord(Rec.class);
+    var rs = mock(ResultSet.class);
+    var now = Instant.now();
+    var expected = new Rec(1, now, "test");
+
+    when(rs.getObject("id")).thenReturn(1);
+    when(rs.getObject("timestamp")).thenReturn(now);
+    when(rs.getObject("value")).thenReturn("test");
+
+    var rec = mapper.map(rs);
+
+    assertThat(rec, is(expected));
+  }
+
+  @Test
+  void testRecordMapperFromTable() {
+    var mapper = JdbcInstance.<Table>mapperOfRecord(Table.class);
+    var set = new HashSet<>();
+    instance.streamed(
+        "select * from test",
+        st -> {},
+        rs -> set.add(mapper.map(rs)));
+
+    assertThat(set, hasItem(new Table("test1")));
+  }
+
   private void createTables(Connection connection) {
     sql(connection,
     """
@@ -111,3 +148,6 @@ class JdbcInstanceTest {
       UUID.randomUUID().toString()));
   }
 }
+
+record Rec(int id, Instant timestamp, String value) {}
+record Table(String name) {}
