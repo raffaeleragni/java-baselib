@@ -150,4 +150,22 @@ class JSONBuilderTest {
     jb.value(Map.of("test", "asd"));
     assertThat(jb.toString(), is("{\"test\":\"asd\"}"));
   }
+
+  @Test
+  void testNativeArray() {
+    jb.value(new int[]{3, 2, 1});
+    assertThat(jb.toString(), is("[3,2,1]"));
+  }
+
+  @Test
+  void testnativeCharrray() {
+    jb.value(new char[]{'a', 'b', 'c'});
+    assertThat(jb.toString(), is("[\"a\",\"b\",\"c\"]"));
+  }
+
+  @Test
+  void testObjectArray() {
+    jb.value(new Character[]{'a', 'b', 'c'});
+    assertThat(jb.toString(), is("[\"a\",\"b\",\"c\"]"));
+  }
 }
