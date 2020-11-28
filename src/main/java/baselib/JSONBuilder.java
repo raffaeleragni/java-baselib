@@ -90,8 +90,15 @@ public final class JSONBuilder {
       sb.append('"');
       sanitizeAppend(s);
       sb.append('"');
-    } else
-      sb.append(o.toString());
+    } else if (o instanceof Number n) {
+      sb.append(n.toString());
+    } else if (o instanceof Boolean b) {
+      sb.append(b.toString());
+    } else {
+      sb.append('"');
+      sanitizeAppend(o.toString());
+      sb.append('"');
+    }
 
     comma = true;
     prop = false;
