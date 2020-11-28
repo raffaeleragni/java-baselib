@@ -15,9 +15,9 @@
  */
 package baselib;
 
+import static baselib.HttpClient.get;
 import baselib.HttpServer.HttpStatus;
 import static baselib.TestHelper.portOccupied;
-import static baselib.TestHelper.requestGet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -55,16 +55,16 @@ class HttpServerTest {
     ));
 
     withServer(server, () -> {
-      assertThat(requestGet(url+"/"), is("hello world"));
+      assertThat(get(url+"/"), is("hello world"));
 
-      assertThat(requestGet(url+"/nooutput"), is(""));
+      assertThat(get(url+"/nooutput"), is(""));
 
       assertThrows(RuntimeException.class, () ->
-        requestGet(url+"/exception")
+        get(url+"/exception")
       );
 
       var status = assertThrows(HttpStatus.class, () ->
-        requestGet(url+"/500")
+        get(url+"/500")
       );
       assertThat(status.status(), is(500));
     });
@@ -84,11 +84,11 @@ class HttpServerTest {
     ));
 
     withServer(server, () -> {
-      requestGet(url+"/test");
-      requestGet(url+"/test/v1");
-      requestGet(url+"/test/");
-      requestGet(url+"/test/v2/");
-      requestGet(url+"/test/v3/v2/v4/");
+      get(url+"/test");
+      get(url+"/test/v1");
+      get(url+"/test/");
+      get(url+"/test/v2/");
+      get(url+"/test/v3/v2/v4/");
 
       assertThat(paths, is(Set.of("/test")));
       assertThat(vars, is(Set.of("", "v1", "v2", "v3/v2/v4")));

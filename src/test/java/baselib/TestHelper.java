@@ -19,14 +19,9 @@ package baselib;
 import static baselib.ExceptionWrapper.ex;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.time.Duration;
 import java.util.function.Consumer;
 
 /**
@@ -42,22 +37,6 @@ final class TestHelper {
     } catch (IOException ex) {
       return false;
     }
-  }
-
-  static String requestGet(String url) {
-    return ex(() -> {
-      HttpClient client = HttpClient.newBuilder()
-          .connectTimeout(Duration.ofSeconds(1))
-          .build();
-      HttpRequest request = HttpRequest.newBuilder()
-          .uri(URI.create(url))
-          .build();
-      var resp = client.send(request, BodyHandlers.ofString());
-      if (resp.statusCode() != 200)
-        throw new HttpServer.HttpStatus(resp.statusCode());
-
-      return resp.body();
-    });
   }
 
   static Connection memoryDB(String name) {
