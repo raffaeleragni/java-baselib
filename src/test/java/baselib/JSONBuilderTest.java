@@ -20,6 +20,7 @@ import static baselib.JSONBuilder.toJSON;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeEach;
@@ -179,6 +180,12 @@ class JSONBuilderTest {
   void testMultiRecord() {
     var rec = new Composed(2, new Comp1(1, "a"));
     assertThat(toJSON(rec), is("{\"id\":2,\"cp\":{\"id\":1,\"name\":\"a\"}}"));
+  }
+
+  @Test
+  void testOptional() {
+    var json = toJSON(Optional.empty());
+    assertThat(json, is("null"));
   }
 }
 

@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  *
@@ -94,6 +95,9 @@ public final class JSONBuilder {
     if (comma && !prop)
       sb.append(',');
     comma = false;
+
+    if (o instanceof Optional op)
+      o = op.orElse(null);
 
     if (o == null) {
       sb.append("null");
