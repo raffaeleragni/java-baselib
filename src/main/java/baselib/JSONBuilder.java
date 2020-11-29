@@ -93,6 +93,7 @@ public final class JSONBuilder {
   public void value(Object o) {
     if (comma && !prop)
       sb.append(',');
+    comma = false;
 
     if (o == null) {
       sb.append("null");
