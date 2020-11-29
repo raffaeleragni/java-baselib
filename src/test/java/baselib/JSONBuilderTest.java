@@ -18,7 +18,8 @@ package baselib;
 
 import static baselib.JSONBuilder.toJSON;
 import java.time.Instant;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import static org.hamcrest.CoreMatchers.is;
@@ -143,13 +144,21 @@ class JSONBuilderTest {
 
   @Test
   void testList() {
-    jb.value(List.of(1, 2, 3));
+    var list = new LinkedList<Object>();
+    list.add(1);
+    list.add(2);
+    list.add(3);
+    list.add(null);
+    jb.value(list);
     assertThat(jb.toString(), is("[1,2,3]"));
   }
 
   @Test
   void testMap() {
-    jb.value(Map.of("test", "asd"));
+    var map = new HashMap<String, Object>();
+    map.put("test", "asd");
+    map.put("test2", null);
+    jb.value(map);
     assertThat(jb.toString(), is("{\"test\":\"asd\"}"));
   }
 
@@ -167,12 +176,12 @@ class JSONBuilderTest {
 
   @Test
   void testObjectArray() {
-    assertThat(toJSON(new Character[]{'a', 'b', 'c'}), is("[\"a\",\"b\",\"c\"]"));
+    assertThat(toJSON(new Character[]{'a', 'b', 'c', null}), is("[\"a\",\"b\",\"c\"]"));
   }
 
   @Test
   void testRecord() {
-    var rec = new My(1, "c", Map.of("a", "b"));
+    var rec = new My(1, "c", Map.of("a", "b"), null);
     assertThat(toJSON(rec), is("{\"x\":1,\"a\":\"c\",\"map\":{\"a\":\"b\"}}"));
   }
 
@@ -189,7 +198,7 @@ class JSONBuilderTest {
   }
 }
 
-record My(int x, String a, Map<String, String> map) {}
+record My(int x, String a, Map<String, String> map, String another) {}
 
 record Comp1(int id, String name) {}
 record Composed(int id, Comp1 cp) {}

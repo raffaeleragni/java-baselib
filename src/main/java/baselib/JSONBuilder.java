@@ -130,8 +130,13 @@ public final class JSONBuilder {
     for (var e: o.getClass().getRecordComponents()) {
       if (!e.getAccessor().canAccess(o))
         continue;
+
+      Object value = ex(() -> e.getAccessor().invoke(o));
+      if (value == null)
+        continue;
+
       property(e.getName());
-      ex(() -> value(e.getAccessor().invoke(o)));
+      value(value);
     }
     endObject();
   }
@@ -151,11 +156,17 @@ public final class JSONBuilder {
     if (o.getClass().getComponentType().isPrimitive()) {
       int length = Array.getLength(o);
       for (int i = 0; i < length; i++) {
+        Object value = Array.get(o, i);
+        if (value == null)
+          continue;
+
         value(Array.get(o, i));
       }
     } else {
       Object[] objects = (Object[]) o;
       for (Object obj : objects) {
+        if (obj == null)
+          continue;
         value(obj);
       }
     }
@@ -164,16 +175,19 @@ public final class JSONBuilder {
 
   private void doCollection(Collection<?> c) {
     beginArray();
-    c.forEach(this::value);
+    c.stream().filter(Objects::nonNull).forEach(this::value);
     endArray();
   }
 
   private void doMap(Map<?,?> m) {
     beginObject();
-    m.entrySet().forEach(e -> {
-      property(e.getKey().toString());
-      value(e.getValue());
-    });
+    m.entrySet().stream()
+      .filter(e -> Objects.nonNull(e.getKey()))
+      .filter(e -> Objects.nonNull(e.getValue()))
+      .forEach(e -> {
+        property(e.getKey().toString());
+        value(e.getValue());
+      });
     endObject();
   }
 
