@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import static baselib.ExceptionWrapper.ex;
 import java.util.HashMap;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,13 +82,13 @@ public final class HttpServer {
    * @return a new map converted into http handlers
    */
   public static Map<String, Consumer<Context>> of(
-      final Map<String, Supplier<String>> providers) {
+      final Map<String, Function<Context, String>> providers) {
 
     var result = new HashMap<String, Consumer<Context>>();
     providers.entrySet()
         .forEach(e ->
             result.put(e.getKey(), ctx ->
-                ctx.response(e.getValue().get())));
+                ctx.response(e.getValue().apply(ctx))));
     return result;
   }
 

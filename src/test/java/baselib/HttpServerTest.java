@@ -92,7 +92,7 @@ class HttpServerTest {
   void testStringProducer() {
     var url = "http://localhost:"+PORT;
     var server = HttpServer.create(PORT, HttpServer.of(Map.of(
-      "/test", () -> "test"
+      "/test", ctx -> "test"
     )));
 
     withServer(server, () -> {
