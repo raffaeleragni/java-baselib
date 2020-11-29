@@ -26,6 +26,8 @@ import java.util.function.Consumer;
 import static baselib.ExceptionWrapper.ex;
 import java.util.HashMap;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Creates a simple http server with basic url mappings.
@@ -34,6 +36,8 @@ import java.util.function.Supplier;
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 public final class HttpServer {
+  private static final Logger LOGGER = Logger.getLogger(HttpServer.class.getName());
+  private static final int HTTP_ERROR_CODE = 500;
   private static final int HTTP_OK = 200;
   private final int port;
   private final com.sun.net.httpserver.HttpServer server; //NOSONAR
@@ -182,6 +186,12 @@ public final class HttpServer {
         exchange.sendResponseHeaders(e.status(), 0);
         exchange.getResponseBody().close();
       });
+    } catch (RuntimeException e) {
+      ex(() -> {
+        exchange.sendResponseHeaders(HTTP_ERROR_CODE, 0);
+        exchange.getResponseBody().close();
+      });
+      LOGGER.log(Level.SEVERE, e, () -> e.getMessage());
     }
   }
 

@@ -67,7 +67,8 @@ class JdbcInstanceTest {
 
   @Test
   void testDefaultClient() {
-    assertThrows(IllegalStateException.class, () -> JdbcInstance.defaultClient().healthCheck());
+    System.setProperty("JDBC_URL", "jdbc:h2:mem:newdb;DB_CLOSE_DELAY=-1");
+    assertThat(JdbcInstance.defaultClient().healthCheck(), is(true));
   }
 
   @Test

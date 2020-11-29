@@ -54,10 +54,11 @@ public final class JdbcInstance {
    *         from environment variables: JDBC_URL, JDBC_USER, JDBC_PASSWORD
    */
   public static JdbcInstance defaultClient() {
+    var env = new Env();
     return new JdbcInstance(() -> ex(() -> DriverManager.getConnection(
-      System.getenv("JDBC_URL"),
-      System.getenv("JDBC_USER"),
-      System.getenv("JDBC_PASSWORD")
+      env.get(() -> "JDBC_URL"),
+      env.get(() -> "JDBC_USER"),
+      env.get(() -> "JDBC_PASSWORD")
     )));
   }
 

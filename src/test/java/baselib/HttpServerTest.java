@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -59,10 +58,7 @@ class HttpServerTest {
 
       assertThat(get(url+"/nooutput").body(), is(""));
 
-      assertThrows(RuntimeException.class, () ->
-        get(url+"/exception")
-      );
-
+      assertThat(get(url+"/exception").statusCode(), is(500));
       assertThat(get(url+"/500").statusCode(), is(500));
     });
   }
