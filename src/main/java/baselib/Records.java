@@ -57,7 +57,7 @@ public final class Records {
     return fromPropertyDiscover(clazz, map::get);
   }
 
-  public static <T> T fromPropertyDiscover(Class<T> clazz, Function<String, Object> fetch) {
+  private static <T> T fromPropertyDiscover(Class<T> clazz, Function<String, Object> fetch) {
     if (fetch == null)
       return null;
     if (!clazz.isRecord())
