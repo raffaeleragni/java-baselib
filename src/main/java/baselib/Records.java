@@ -66,8 +66,13 @@ public final class Records {
     var params = new LinkedList<Object>();
     var types = new LinkedList<Class<?>>();
     for (var e: clazz.getRecordComponents()) {
-      types.add(e.getType());
-      params.add(fetch.apply(e.getName()));
+      var type = e.getType();
+      var value = fetch.apply(e.getName());
+      types.add(type);
+      if (type.isRecord() && value instanceof Map m)
+        params.add(fromMap(type, m));
+      else
+        params.add(value);
     }
 
     var constructor = ex(() -> clazz.getDeclaredConstructor(types.toArray(new Class[]{})));

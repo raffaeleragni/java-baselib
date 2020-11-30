@@ -69,6 +69,15 @@ class RecordsTest {
     var expected = new Sample(1, "test");
     assertThat(rec, is(expected));
   }
+
+  @Test
+  void testToNedtedRecord() {
+    var map = Map.of("visible", true, "sample", Map.of("id", 1, "name", "test"));
+    var rec = new Sample(1, "test");
+    var expected = new Nested(true, rec);
+
+    assertThat(Records.fromMap(Nested.class, map), is(expected));
+  }
 }
 
 record Sample(int id, String name) {}

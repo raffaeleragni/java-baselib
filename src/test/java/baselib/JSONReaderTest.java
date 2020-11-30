@@ -25,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import static baselib.JSONReader.toObject;
+import static baselib.JSONReader.toRecord;
 
 /**
  *
@@ -32,6 +33,7 @@ import static baselib.JSONReader.toObject;
  */
 class JSONReaderTest {
   public record JsonRecord(int id, String name) {}
+  public record JsonRecordGrouped(int id, JsonRecord rec) {}
 
   @Test
   void testEmptyResult() {
@@ -113,6 +115,23 @@ class JSONReaderTest {
     """);
 
     assertThat(rec, is(new JsonRecord(1, "test")));
+  }
+
+  @Test
+  void testNestedRecord() {
+    var rec = new JsonRecord(2, "nested");
+    var expected = new JsonRecordGrouped(1, rec);
+    assertThat(toRecord(JsonRecordGrouped.class,
+        """
+        {
+          "id": 1,
+          "rec": {
+            "id": 2,
+            "name": "nested"
+          }
+        }
+        """),
+        is(expected));
   }
 
   @Test
