@@ -15,6 +15,7 @@
  */
 package baselib;
 
+import static baselib.ExceptionWrapper.ex;
 import static baselib.HttpClient.get;
 import static baselib.HttpClient.post;
 import baselib.HttpServer.HttpStatus;
@@ -95,6 +96,18 @@ class HttpServerTest {
     var server = HttpServer.create(PORT, HttpServer.of(Map.of(
       "/test", ctx -> "test"
     )));
+
+    withServer(server, () -> {
+      assertThat(get(url+"/test").body(), is("test"));
+    });
+  }
+
+  @Test
+  void testWriter() {
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, Map.of(
+      "/test", ctx -> ctx.writer(out -> ex(() -> out.write("test")))
+    ));
 
     withServer(server, () -> {
       assertThat(get(url+"/test").body(), is("test"));

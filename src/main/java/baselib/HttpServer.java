@@ -139,6 +139,14 @@ public final class HttpServer {
     void response(String body);
 
     /**
+     * This method is used to output in a streamed way.
+     * Use only a single outputing technique, either this or response(String)
+     * or any other new outputing method, but don't mix them.
+     * @param consumer lambda to consume the writer
+     */
+    void writer(Consumer<BufferedWriter> consumer);
+
+    /**
      *
      * @return the part of the path that was statically mapped to the handler.
      *         differently than variablePath(), it returns only the prefix.
@@ -231,7 +239,7 @@ public final class HttpServer {
 
     @Override
     public String body() {
-      return reader(in -> ex(() -> {
+      return consumeReader(in -> ex(() -> {
         var w = new StringWriter();
         in.transferTo(w);
         return w.toString();
@@ -240,13 +248,21 @@ public final class HttpServer {
 
     @Override
     public void response(final String body) {
-      writer(out ->
+      consumeWriter(out ->
         ex(() -> {
           exchange.sendResponseHeaders(HTTP_OK, body.length());
           out.write(body);
           responseSent = true;
         })
       );
+    }
+
+    @Override
+    public void writer(Consumer<BufferedWriter> consumer) {
+      ex(() -> {
+        exchange.sendResponseHeaders(HTTP_OK, 0);
+        consumeWriter(consumer);
+      });
     }
 
     @Override
@@ -263,7 +279,7 @@ public final class HttpServer {
       return responseSent;
     }
 
-    private <T> T reader(final Function<BufferedReader, T> reader) {
+    private <T> T consumeReader(final Function<BufferedReader, T> reader) {
       return ex(() -> {
         try (var in = new BufferedReader(
             new InputStreamReader(exchange.getRequestBody(), UTF_8))) {
@@ -272,7 +288,7 @@ public final class HttpServer {
       });
     }
 
-    private void writer(final Consumer<BufferedWriter> writer) {
+    private void consumeWriter(final Consumer<BufferedWriter> writer) {
       ex(() -> {
         try (var out = new BufferedWriter(
             new OutputStreamWriter(exchange.getResponseBody(), UTF_8))) {
