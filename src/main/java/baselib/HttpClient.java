@@ -19,6 +19,7 @@ package baselib;
 import static baselib.ExceptionWrapper.ex;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
@@ -28,15 +29,30 @@ import java.time.Duration;
  */
 public final class HttpClient {
 
+  private static final int TIMEOUT = 1;
+
   private HttpClient() {
   }
 
   public static HttpResponse<String> get(final String url) {
     return ex(() -> {
       var client = java.net.http.HttpClient.newBuilder()
-          .connectTimeout(Duration.ofSeconds(1))
+          .connectTimeout(Duration.ofSeconds(TIMEOUT))
           .build();
       HttpRequest request = HttpRequest.newBuilder()
+          .uri(URI.create(url))
+          .build();
+      return client.send(request, HttpResponse.BodyHandlers.ofString());
+    });
+  }
+
+  public static HttpResponse<String> post(final String url, final String body) {
+    return ex(() -> {
+      var client = java.net.http.HttpClient.newBuilder()
+          .connectTimeout(Duration.ofSeconds(TIMEOUT))
+          .build();
+      HttpRequest request = HttpRequest.newBuilder()
+          .method("POST", BodyPublishers.ofString(body))
           .uri(URI.create(url))
           .build();
       return client.send(request, HttpResponse.BodyHandlers.ofString());

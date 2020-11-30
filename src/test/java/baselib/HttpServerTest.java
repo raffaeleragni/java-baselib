@@ -16,6 +16,7 @@
 package baselib;
 
 import static baselib.HttpClient.get;
+import static baselib.HttpClient.post;
 import baselib.HttpServer.HttpStatus;
 import static baselib.TestHelper.portOccupied;
 import java.util.HashSet;
@@ -97,6 +98,27 @@ class HttpServerTest {
 
     withServer(server, () -> {
       assertThat(get(url+"/test").body(), is("test"));
+    });
+  }
+
+  @Test
+  void testBodyReader() {
+    var body = new String[1];
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, Map.of(
+      "/read", ctx -> {
+        body[0] = ctx.body();
+        ctx.response("");
+      }
+    ));
+    var requestBody = """
+                      {"id":1, "test":"test2"}
+                      """;
+
+    withServer(server, () -> {
+      post(url+"/read", requestBody);
+
+      assertThat(body[0], is(requestBody));
     });
   }
 

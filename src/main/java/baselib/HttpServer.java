@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import static baselib.ExceptionWrapper.ex;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -120,6 +123,12 @@ public final class HttpServer {
    * with this context instance you can access request and response.
    */
   public interface Context {
+
+    /**
+     *
+     * @return fetch the request body, useful for POSTs
+     */
+    String body();
 
     /**
      * Write a string as a response.
@@ -221,6 +230,15 @@ public final class HttpServer {
     }
 
     @Override
+    public String body() {
+      return reader(in -> ex(() -> {
+        var w = new StringWriter();
+        in.transferTo(w);
+        return w.toString();
+      }));
+    }
+
+    @Override
     public void response(final String body) {
       writer(out ->
         ex(() -> {
@@ -243,6 +261,15 @@ public final class HttpServer {
 
     boolean responseSent() {
       return responseSent;
+    }
+
+    private <T> T reader(final Function<BufferedReader, T> reader) {
+      return ex(() -> {
+        try (var in = new BufferedReader(
+            new InputStreamReader(exchange.getRequestBody(), UTF_8))) {
+          return reader.apply(in);
+        }
+      });
     }
 
     private void writer(final Consumer<BufferedWriter> writer) {
