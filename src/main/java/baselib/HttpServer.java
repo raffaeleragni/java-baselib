@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,11 +48,13 @@ public final class HttpServer {
 
   private HttpServer(
       final int serverPort,
+      final int threads,
       final Map<String, Consumer<Context>> handlers) {
 
     this.port = serverPort;
     this.server = ex(() -> //NOSONAR
         com.sun.net.httpserver.HttpServer.create()); //NOSONAR
+    this.server.setExecutor(Executors.newFixedThreadPool(threads));
     Objects.requireNonNull(handlers.entrySet())
       .stream()
       .filter(e -> Objects.nonNull(e.getValue()))
@@ -75,8 +78,9 @@ public final class HttpServer {
    * @return
    */
   public static HttpServer create(final int serverPort,
+      final int threads,
       final Map<String, Consumer<Context>> handlers) {
-    return new HttpServer(serverPort, handlers);
+    return new HttpServer(serverPort, threads, handlers);
   }
 
   /**

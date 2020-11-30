@@ -33,10 +33,11 @@ import org.junit.jupiter.api.Test;
  */
 class HttpServerTest {
   private static final int PORT = 54321;
+  private static final int THREADS = 10;
 
   @Test
   void testServer() {
-    var server = HttpServer.create(PORT, Map.of());
+    var server = HttpServer.create(PORT, THREADS, Map.of());
 
     assertThat(portOccupied(PORT), is(false));
     withServer(server, () -> {
@@ -48,7 +49,7 @@ class HttpServerTest {
   @Test
   void testSimpleBodyOutput() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/", ctx -> ctx.response("hello world"),
       "/exception", ctx -> {throw new RuntimeException();},
       "/500", ctx -> {throw new HttpStatus(500);},
@@ -70,7 +71,7 @@ class HttpServerTest {
     var paths = new HashSet<String>();
     var vars = new HashSet<String>();
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/test", ctx -> {
         paths.add(ctx.mappedPath());
         vars.add(ctx.variablePath());
@@ -93,7 +94,7 @@ class HttpServerTest {
   @Test
   void testStringProducer() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, HttpServer.of(Map.of(
+    var server = HttpServer.create(PORT, THREADS, HttpServer.of(Map.of(
       "/test", ctx -> "test"
     )));
 
@@ -105,7 +106,7 @@ class HttpServerTest {
   @Test
   void testWriter() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/test", ctx -> ctx.writer(out -> ex(() -> out.write("test")))
     ));
 
@@ -117,7 +118,7 @@ class HttpServerTest {
   @Test
   void testWriterRemapped() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, HttpServer.of(Map.of(
+    var server = HttpServer.create(PORT, THREADS, HttpServer.of(Map.of(
       "/test", ctx -> {
         ctx.writer(out -> ex(() -> out.write("test")));
         return "";
@@ -133,7 +134,7 @@ class HttpServerTest {
   void testBodyReader() {
     var body = new String[1];
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/read", ctx -> {
         body[0] = ctx.body();
         ctx.response("");
