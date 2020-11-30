@@ -115,6 +115,21 @@ class HttpServerTest {
   }
 
   @Test
+  void testWriterRemapped() {
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, HttpServer.of(Map.of(
+      "/test", ctx -> {
+        ctx.writer(out -> ex(() -> out.write("test")));
+        return "";
+      }
+    )));
+
+    withServer(server, () -> {
+      assertThat(get(url+"/test").body(), is("test"));
+    });
+  }
+
+  @Test
   void testBodyReader() {
     var body = new String[1];
     var url = "http://localhost:"+PORT;

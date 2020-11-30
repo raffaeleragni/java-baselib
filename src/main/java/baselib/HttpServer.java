@@ -248,6 +248,8 @@ public final class HttpServer {
 
     @Override
     public void response(final String body) {
+      if (responseSent)
+        return;
       consumeWriter(out ->
         ex(() -> {
           exchange.sendResponseHeaders(HTTP_OK, body.length());
@@ -259,9 +261,12 @@ public final class HttpServer {
 
     @Override
     public void writer(Consumer<BufferedWriter> consumer) {
+      if (responseSent)
+        return;
       ex(() -> {
         exchange.sendResponseHeaders(HTTP_OK, 0);
         consumeWriter(consumer);
+        responseSent = true;
       });
     }
 
