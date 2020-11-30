@@ -37,8 +37,6 @@ public final class ExceptionWrapper {
   public static <T> T ex(final WrapperT<T> callable) {
     try {
       return callable.call();
-    } catch (RuntimeException ex) {
-      throw ex;
     } catch (Exception ex) {
       throw new IllegalStateException(ex.getMessage(), ex);
     }
@@ -53,8 +51,6 @@ public final class ExceptionWrapper {
   public static void ex(final Wrapper callable) {
     try {
       callable.call();
-    } catch (RuntimeException ex) {
-      throw ex;
     } catch (Exception ex) {
       throw new IllegalStateException(ex.getMessage(), ex);
     }

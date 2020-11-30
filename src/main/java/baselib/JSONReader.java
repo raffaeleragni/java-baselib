@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * JSON reader, it wraps around an actual reader and uses constant memory within
@@ -47,8 +49,16 @@ public class JSONReader {
     this.reader = reader;
   }
 
-  public static Object fromJSON(final String string) {
+  public static Object toObject(final String string) {
     return new JSONReader(new StringReader(string)).toObject();
+  }
+
+  public static <T> T toRecord(Class<T> clazz, final String string) {
+    return new JSONReader(new StringReader(string)).toRecord(clazz);
+  }
+
+  public static <T> List<T> toRecordList(Class<T> clazz, final String string) {
+    return new JSONReader(new StringReader(string)).toRecordList(clazz);
   }
 
   public Object toObject() {
@@ -57,6 +67,40 @@ public class JSONReader {
     } finally {
       ex(() -> reader.close());
     }
+  }
+
+  public <T> T toRecord(Class<T> clazz) {
+    if (clazz == null || !clazz.isRecord())
+      throw new IllegalArgumentException("Class need to be of record type.");
+
+    var ch = nextCharNonWhitespace();
+    if (ch != '{')
+      return null;
+
+    var map = readObject();
+    if (map == null || map.isEmpty())
+      return null;
+
+    return Records.fromMap(clazz, map);
+  }
+
+  public <T> List<T> toRecordList(Class<T> clazz) {
+    if (clazz == null || !clazz.isRecord())
+      throw new IllegalArgumentException("Class need to be of record type.");
+
+    var ch = nextCharNonWhitespace();
+    if (ch != '[')
+      return null;
+
+    var list = new LinkedList<T>();
+    walkThroughJSONArray(o -> {
+      var map = (Map<String, Object>) o;
+      if (map == null || map.isEmpty())
+        return;
+      list.add(Records.fromMap(clazz, map));
+    });
+
+    return list;
   }
 
   private Object readItem(Integer prev) {
@@ -125,39 +169,43 @@ public class JSONReader {
 
   private List readArray() {
     var list = new LinkedList<Object>();
+    walkThroughJSONArray(list::add);
+    return list;
+  }
+
+  private Map<String, Object> readObject() {
+    var map = new HashMap<String, Object>();
+    walkThroughJSONObject(map::put);
+    return map;
+  }
+
+  private void walkThroughJSONArray(Consumer<Object> fn) {
     var ch = nextChar();
     while (ch != -1 && ch != ']') {
-      list.add(readItem(ch));
+      fn.accept(readItem(ch));
       ch = nextCharNonWhitespace();
       if (ch == ',')
         ch = nextCharNonWhitespace();
     }
-    return list;
   }
 
-  private Map readObject() {
-    var map = new HashMap<String, Object>();
+  private void walkThroughJSONObject(BiConsumer<String, Object> fn) {
     var ch = nextCharNonWhitespace();
     while (ch != -1 && ch != '}') {
       if (ch != '"')
         break;
 
       var prop = readString();
-
       ch = nextCharNonWhitespace();
       if (ch != ':')
         break;
 
       var value = readItem(null);
-
-      map.put(prop, value);
-
-      ch = nextCharNonWhitespace();
-      if (ch != ',')
-        break;
+      fn.accept(prop, value);
 
       ch = nextCharNonWhitespace();
+      if (ch == ',')
+        ch = nextCharNonWhitespace();
     }
-    return map;
   }
 }

@@ -16,61 +16,63 @@
 
 package baselib;
 
-import static baselib.JSONReader.fromJSON;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import static baselib.JSONReader.toObject;
 
 /**
  *
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 class JSONReaderTest {
+  public record JsonRecord(int id, String name) {}
 
   @Test
   void testEmptyResult() {
-    assertThat(fromJSON(""), is(nullValue()));
-    assertThat(fromJSON("null"), is(nullValue()));
-    assertThat(fromJSON("{}"), is(Map.of()));
+    assertThat(toObject(""), is(nullValue()));
+    assertThat(toObject("null"), is(nullValue()));
+    assertThat(toObject("{}"), is(Map.of()));
   }
 
   @Test
   void testString() {
-    assertThat(fromJSON("\"\"   "), is(""));
-    assertThat(fromJSON("  \"asd\""), is("asd"));
-    assertThat(fromJSON("\t\t\"as\\\"d\""), is("as\"d"));
+    assertThat(toObject("\"\"   "), is(""));
+    assertThat(toObject("  \"asd\""), is("asd"));
+    assertThat(toObject("\t\t\"as\\\"d\""), is("as\"d"));
   }
 
   @Test
   void testLiteralsBooleans() {
-    assertThat(fromJSON("true"), is(true));
-    assertThat(fromJSON("false"), is(false));
+    assertThat(toObject("true"), is(true));
+    assertThat(toObject("false"), is(false));
   }
 
   @Test
   void testLiteralsNumbers() {
-    assertThat(fromJSON("1"), is(1));
-    assertThat(fromJSON("2"), is(2));
-    assertThat(fromJSON("3"), is(3));
+    assertThat(toObject("1"), is(1));
+    assertThat(toObject("2"), is(2));
+    assertThat(toObject("3"), is(3));
   }
 
   @Test
   void testLiteralsDecimals() {
-    assertThat(fromJSON("1.1"), is(new BigDecimal("1.1")));
+    assertThat(toObject("1.1"), is(new BigDecimal("1.1")));
   }
 
   @Test
   void testArrays() {
-    assertThat(fromJSON("[1, 2, 3]"), is(List.of(1, 2, 3)));
+    assertThat(toObject("[1, 2, 3]"), is(List.of(1, 2, 3)));
   }
 
   @Test
   void testObjects() {
-    assertThat(fromJSON("""
+    assertThat(toObject("""
                         {
                           "a": "b",
                           "c": 1
@@ -79,7 +81,7 @@ class JSONReaderTest {
         is(Map.of("a", "b", "c", 1)));
 
 
-    assertThat(fromJSON("""
+    assertThat(toObject("""
                         {
                           "a": "b",
                           "c": {
@@ -89,4 +91,56 @@ class JSONReaderTest {
                         """),
         is(Map.of("a", "b", "c", Map.of("d", 5))));
   }
+
+  @Test
+  void testNoRecordToRecord() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      JSONReader.toRecord(null, "");
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      JSONReader.toRecord(Object.class, "");
+    });
+  }
+
+  @Test
+  void testRecord() {
+    var rec = JSONReader.toRecord(JsonRecord.class,
+    """
+    {
+      "id": 1,
+      "name": "test"
+    }
+    """);
+
+    assertThat(rec, is(new JsonRecord(1, "test")));
+  }
+
+  @Test
+  void testNonRecordList() {
+    assertThat(JSONReader.toRecordList(JsonRecord.class, "{}"), is(nullValue()));
+  }
+
+  @Test
+  void testRecordList() {
+    var rec = JSONReader.toRecordList(JsonRecord.class,
+    """
+     [{
+       "id": 1,
+       "name": "test1"
+     }, {
+       "id": 2,
+       "name": "test2"
+     }, {
+       "id": 3,
+       "name": "test3"
+     }]
+    """);
+
+    assertThat(rec, is(List.of(
+      new JsonRecord(1, "test1"),
+      new JsonRecord(2, "test2"),
+      new JsonRecord(3, "test3")
+    )));
+  }
 }
+
