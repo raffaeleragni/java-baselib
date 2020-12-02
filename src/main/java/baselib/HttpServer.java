@@ -27,7 +27,6 @@ import static baselib.ExceptionWrapper.ex;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -49,7 +48,7 @@ public final class HttpServer {
   private HttpServer(
       final int serverPort,
       final int threads,
-      final Map<String, Consumer<Context>> handlers) {
+      final Map<String, Function<Context, String>> handlers) {
 
     this.port = serverPort;
     this.server = ex(() -> //NOSONAR
@@ -79,24 +78,8 @@ public final class HttpServer {
    */
   public static HttpServer create(final int serverPort,
       final int threads,
-      final Map<String, Consumer<Context>> handlers) {
+      final Map<String, Function<Context, String>> handlers) {
     return new HttpServer(serverPort, threads, handlers);
-  }
-
-  /**
-   * Convert straight output string providers into http handlers.
-   * @param providers provider maps, url: () -> "result"
-   * @return a new map converted into http handlers
-   */
-  public static Map<String, Consumer<Context>> of(
-      final Map<String, Function<Context, String>> providers) {
-
-    var result = new HashMap<String, Consumer<Context>>();
-    providers.entrySet()
-        .forEach(e ->
-            result.put(e.getKey(), ctx ->
-                ctx.response(e.getValue().apply(ctx))));
-    return result;
   }
 
   /**
@@ -191,11 +174,13 @@ public final class HttpServer {
   private static void wrapExchange(
       final String originalMappedPath,
       final HttpExchange exchange,
-      final Consumer<Context> function) {
+      final Function<Context, String> function) {
 
     var ctx = new ContextImpl(originalMappedPath, exchange);
     try {
-      function.accept(ctx);
+      var resp = function.apply(ctx);
+      if (resp != null && !resp.isEmpty())
+        ctx.response(resp);
 
       if (!ctx.responseSent())
         ex(() -> {

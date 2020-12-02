@@ -50,10 +50,10 @@ class HttpServerTest {
   void testSimpleBodyOutput() {
     var url = "http://localhost:"+PORT;
     var server = HttpServer.create(PORT, THREADS, Map.of(
-      "/", ctx -> ctx.response("hello world"),
+      "/", ctx -> "hello world",
       "/exception", ctx -> {throw new RuntimeException();},
       "/500", ctx -> {throw new HttpStatus(500);},
-      "/nooutput", ctx -> {}
+      "/nooutput", ctx -> ""
     ));
 
     withServer(server, () -> {
@@ -75,7 +75,7 @@ class HttpServerTest {
       "/test", ctx -> {
         paths.add(ctx.mappedPath());
         vars.add(ctx.variablePath());
-        ctx.response("");
+        return "";
       }
     ));
 
@@ -94,9 +94,9 @@ class HttpServerTest {
   @Test
   void testStringProducer() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, THREADS, HttpServer.of(Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/test", ctx -> "test"
-    )));
+    ));
 
     withServer(server, () -> {
       assertThat(get(url+"/test").body(), is("test"));
@@ -107,7 +107,10 @@ class HttpServerTest {
   void testWriter() {
     var url = "http://localhost:"+PORT;
     var server = HttpServer.create(PORT, THREADS, Map.of(
-      "/test", ctx -> ctx.writer(out -> ex(() -> out.write("test")))
+      "/test", ctx -> {
+        ctx.writer(out -> ex(() -> out.write("test")));
+        return "";
+      }
     ));
 
     withServer(server, () -> {
@@ -118,12 +121,12 @@ class HttpServerTest {
   @Test
   void testWriterRemapped() {
     var url = "http://localhost:"+PORT;
-    var server = HttpServer.create(PORT, THREADS, HttpServer.of(Map.of(
+    var server = HttpServer.create(PORT, THREADS, Map.of(
       "/test", ctx -> {
         ctx.writer(out -> ex(() -> out.write("test")));
         return "";
       }
-    )));
+    ));
 
     withServer(server, () -> {
       assertThat(get(url+"/test").body(), is("test"));
@@ -137,7 +140,7 @@ class HttpServerTest {
     var server = HttpServer.create(PORT, THREADS, Map.of(
       "/read", ctx -> {
         body[0] = ctx.body();
-        ctx.response("");
+        return "";
       }
     ));
     var requestBody = """
