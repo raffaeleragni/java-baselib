@@ -197,7 +197,7 @@ public final class HttpServer {
         exchange.sendResponseHeaders(HTTP_ERROR_CODE, 0);
         exchange.getResponseBody().close();
       });
-      LOGGER.log(Level.SEVERE, e, () -> e.getMessage());
+      LOGGER.log(Level.SEVERE, e, e::getMessage);
     }
   }
 

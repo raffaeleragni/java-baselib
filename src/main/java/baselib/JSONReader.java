@@ -65,7 +65,7 @@ public class JSONReader {
     try {
       return readItem(null);
     } finally {
-      ex(() -> reader.close());
+      ex(reader::close);
     }
   }
 
@@ -78,7 +78,7 @@ public class JSONReader {
       return null;
 
     var map = readObject();
-    if (map == null || map.isEmpty())
+    if (map.isEmpty())
       return null;
 
     return Records.fromMap(clazz, map);
@@ -90,7 +90,7 @@ public class JSONReader {
 
     var ch = nextCharNonWhitespace();
     if (ch != '[')
-      return null;
+      return null;//NOSONAR
 
     var list = new LinkedList<T>();
     walkThroughJSONArray(o -> {
@@ -122,7 +122,7 @@ public class JSONReader {
   }
 
   private int nextChar() {
-    return ex(() -> reader.read());
+    return ex(() -> reader.read()); //NOSONAR
   }
 
   private Object readLiteral(int ch) {
@@ -141,15 +141,15 @@ public class JSONReader {
 
     try {
       return Integer.valueOf(s);
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {} //NOSONAR
 
     try {
       return Long.valueOf(s);
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {} //NOSONAR
 
     try {
       return new BigDecimal(s);
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {} //NOSONAR
 
     return null;
   }
@@ -167,7 +167,7 @@ public class JSONReader {
     return builder.toString();
   }
 
-  private List readArray() {
+  private List readArray() { //NOSONAR
     var list = new LinkedList<Object>();
     walkThroughJSONArray(list::add);
     return list;
@@ -191,7 +191,7 @@ public class JSONReader {
 
   private void walkThroughJSONObject(BiConsumer<String, Object> fn) {
     var ch = nextCharNonWhitespace();
-    while (ch != -1 && ch != '}') {
+    while (ch != -1 && ch != '}') { //NOSONAR
       if (ch != '"')
         break;
 

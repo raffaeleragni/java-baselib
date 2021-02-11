@@ -196,6 +196,32 @@ class JSONBuilderTest {
     var json = toJSON(Optional.empty());
     assertThat(json, is("null"));
   }
+
+  @Test
+  void testPrependCommaToArray() {
+    jb.beginArray();
+
+    jb.beginArray();
+    jb.endArray();
+
+    jb.beginArray();
+    jb.endArray();
+
+    jb.value(1);
+
+    jb.endArray();
+
+    var result = jb.toString();
+    assertThat(result, is("[[],[],1]"));
+  }
+
+  @Test
+  void testTestNullsInArray() {
+    jb.value(new Integer[]{1, null, 2});
+
+    var result = jb.toString();
+    assertThat(result, is("[1,2]"));
+  }
 }
 
 record My(int x, String a, Map<String, String> map, String another) {}
