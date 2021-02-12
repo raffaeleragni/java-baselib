@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,15 @@ class FSKVTest {
     var rec2 = store.get(rec.uuid());
 
     assertThat(rec, is(rec2));
+  }
+
+  @Test
+  void testInvalidPaths() {
+    var rec = new TestRecord(UUID.randomUUID().toString(), "test");
+
+    assertThrows(IllegalArgumentException.class, () -> store.put("../a", rec));
+
+    assertThrows(IllegalArgumentException.class, () -> store.get("../a"));
   }
 
 }

@@ -17,6 +17,7 @@ package baselib;
 
 import static baselib.ExceptionWrapper.ex;
 import static baselib.JSONBuilder.toJSON;
+import static baselib.JSONReader.toRecord;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -27,6 +28,7 @@ import java.util.Objects;
  * @author Raffaele Ragni
  */
 public class FSKV<V> {
+  static final String EXTENSION = ".json";
   final Path dir;
   final Class<V> clazz;
 
@@ -43,16 +45,25 @@ public class FSKV<V> {
     Objects.requireNonNull(uuid);
     Objects.requireNonNull(rec);
 
-    var itemPath = dir.resolve(uuid+".json");
+    var itemPath = dir.resolve(uuid + EXTENSION).normalize();
+    ensureNotParented(itemPath);
+
     var itemString = toJSON(rec);
     ex(() -> Files.writeString(itemPath, itemString));
+  }
+
+  final void ensureNotParented(Path itemPath) {
+    if (!itemPath.startsWith(dir))
+      throw new IllegalArgumentException("Path is not absolute");
   }
 
   public V get(String uuid) {
     Objects.requireNonNull(uuid);
 
-    var itemPath = dir.resolve(uuid+".json");
+    var itemPath = dir.resolve(uuid + EXTENSION).normalize();
+    ensureNotParented(itemPath);
+
     var itemString = ex(() -> Files.readString(itemPath));
-    return JSONReader.toRecord(clazz, itemString);
+    return toRecord(clazz, itemString);
   }
 }
