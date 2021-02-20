@@ -34,7 +34,7 @@ final class TestHelper {
   static boolean portOccupied(int port) {
     try (var sock = new Socket("127.0.0.1", port)) {
       return true;
-    } catch (IOException ex) {
+    } catch (IOException | RuntimeException ex) {
       return false;
     }
   }
