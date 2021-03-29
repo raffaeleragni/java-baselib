@@ -17,6 +17,7 @@
 package baselib;
 
 import static baselib.ExceptionWrapper.ex;
+import java.lang.reflect.RecordComponent;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -67,7 +68,7 @@ public final class Records {
     var types = new LinkedList<Class<?>>();
     for (var e: clazz.getRecordComponents()) {
       var type = e.getType();
-      var value = fetch.apply(e.getName());
+      var value = getValueWithDifferentPropertyNameStyles(fetch, e);
       types.add(type);
       if (type.isRecord() && value instanceof Map m)
         params.add(fromMap(type, m));
@@ -78,5 +79,29 @@ public final class Records {
     var constructor = ex(() -> clazz.getDeclaredConstructor(types.toArray(new Class[]{})));
 
     return ex(() -> constructor.newInstance(params.toArray()));
+  }
+
+  static Object getValueWithDifferentPropertyNameStyles(Function<String, Object> fetch, RecordComponent e) {
+    var value = fetch.apply(e.getName());
+    if (value != null)
+      return value;
+
+    var snakeName = NameTransform.SNAKE.apply(e.getName());
+    value = fetch.apply(snakeName.toLowerCase());
+    if (value != null)
+      return value;
+
+    value = fetch.apply(snakeName.toUpperCase());
+    if (value != null)
+      return value;
+
+    var kebabName = NameTransform.KEBAB.apply(e.getName());
+    value = fetch.apply(kebabName.toLowerCase());
+    if (value != null)
+      return value;
+
+    value = fetch.apply(kebabName.toUpperCase());
+
+    return value;
   }
 }

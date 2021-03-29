@@ -30,6 +30,10 @@ import org.junit.jupiter.api.Test;
  */
 class RecordsTest {
 
+  public record Sample(int id, String name) {}
+  public record Nested(boolean visible, Sample sample) {}
+  public record SampleMoreNames(int id, String nameDifferent) {}
+
   @Test
   void testNoRecord() {
     assertThrows(IllegalArgumentException.class, () -> {
@@ -78,7 +82,39 @@ class RecordsTest {
 
     assertThat(Records.fromMap(Nested.class, map), is(expected));
   }
-}
 
-record Sample(int id, String name) {}
-record Nested(boolean visible, Sample sample) {}
+  @Test
+  void testNameCaseNone() {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "nameDifferent", "test"));
+    var expected = new SampleMoreNames(1, "test");
+    assertThat(rec, is(expected));
+  }
+
+  @Test
+  void testNameCaseSnake() {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "name_different", "test"));
+    var expected = new SampleMoreNames(1, "test");
+    assertThat(rec, is(expected));
+  }
+
+  @Test
+  void testNameCaseSnakeUpper() {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "NAME_DIFFERENT", "test"));
+    var expected = new SampleMoreNames(1, "test");
+    assertThat(rec, is(expected));
+  }
+
+  @Test
+  void testNameKebab() {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "name-different", "test"));
+    var expected = new SampleMoreNames(1, "test");
+    assertThat(rec, is(expected));
+  }
+
+  @Test
+  void testNameKebabUpper() {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "NAME-DIFFERENT", "test"));
+    var expected = new SampleMoreNames(1, "test");
+    assertThat(rec, is(expected));
+  }
+}
