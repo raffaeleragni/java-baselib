@@ -42,11 +42,16 @@ import java.util.function.Consumer;
  *
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
-public class JSONReader {
+public class JSONReader implements AutoCloseable {
 
   final Reader reader;
   public JSONReader(final Reader reader) {
     this.reader = reader;
+  }
+
+  @Override
+  public void close() {
+    ex(() -> reader.close());
   }
 
   public static Object toObject(final String string) {

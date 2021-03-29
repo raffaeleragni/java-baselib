@@ -22,6 +22,7 @@ import baselib.HttpServer.HttpStatus;
 import static baselib.TestHelper.portOccupied;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.Test;
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 class HttpServerTest {
-  private static final int PORT = 54321;
+  private static final int PORT = new Random(System.currentTimeMillis()).nextInt(50_000)+1024;
   private static final int THREADS = 10;
 
   @Test

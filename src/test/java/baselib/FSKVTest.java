@@ -28,18 +28,18 @@ import org.junit.jupiter.api.Test;
  * @author Raffaele Ragni
  */
 class FSKVTest {
-  FSKV<TestRecord> store;
+  FSKV<TestRecordForFSKV> store;
 
   @BeforeEach
   void setup() {
     var dir = Path.of(System.getProperty("java.io.tmpdir"),
       "storetest" + System.currentTimeMillis());
-    store = new FSKV<>(dir, TestRecord.class);
+    store = new FSKV<>(dir, TestRecordForFSKV.class);
   }
 
   @Test
   void testPutGet() {
-    var rec = new TestRecord(UUID.randomUUID().toString(), "test");
+    var rec = new TestRecordForFSKV(UUID.randomUUID().toString(), "test");
 
     store.put(rec.uuid(), rec);
 
@@ -50,7 +50,7 @@ class FSKVTest {
 
   @Test
   void testInvalidPaths() {
-    var rec = new TestRecord(UUID.randomUUID().toString(), "test");
+    var rec = new TestRecordForFSKV(UUID.randomUUID().toString(), "test");
 
     assertThrows(IllegalArgumentException.class, () -> store.put("../a", rec));
 
@@ -59,4 +59,4 @@ class FSKVTest {
 
 }
 
-record TestRecord(String uuid, String name) {}
+record TestRecordForFSKV(String uuid, String name) {}
