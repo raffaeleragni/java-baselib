@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.metrics;
 
 import java.io.StringWriter;
 import static org.hamcrest.CoreMatchers.containsString;

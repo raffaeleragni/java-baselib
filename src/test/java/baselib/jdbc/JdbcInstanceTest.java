@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.jdbc;
 
+import baselib.TestHelper;
 import static baselib.TestHelper.sql;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -39,6 +40,9 @@ import static org.mockito.Mockito.when;
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
 class JdbcInstanceTest {
+  public record Rec(int id, Instant timestamp, String value) {}
+  public record Table(String name) {}
+
   JdbcInstance instance;
 
   @BeforeEach
@@ -164,5 +168,3 @@ class JdbcInstanceTest {
   }
 }
 
-record Rec(int id, Instant timestamp, String value) {}
-record Table(String name) {}

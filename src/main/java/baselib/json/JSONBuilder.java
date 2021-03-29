@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.json;
 
 import static baselib.ExceptionWrapper.ex;
 import java.lang.reflect.Array;

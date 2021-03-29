@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.http;
 
 import static baselib.ExceptionWrapper.ex;
 import java.net.URI;

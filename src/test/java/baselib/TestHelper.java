@@ -28,10 +28,10 @@ import java.util.function.Consumer;
  *
  * @author Raffaele Ragni <raffaele.ragni@gmail.com>
  */
-final class TestHelper {
+public final class TestHelper {
   private TestHelper() {}
 
-  static boolean portOccupied(int port) {
+  public static boolean portOccupied(int port) {
     try (var sock = new Socket("127.0.0.1", port)) {
       return true;
     } catch (IOException | RuntimeException ex) {
@@ -39,13 +39,13 @@ final class TestHelper {
     }
   }
 
-  static Connection memoryDB(String name) {
+  public static Connection memoryDB(String name) {
     return ex(() ->
       DriverManager.getConnection("jdbc:h2:mem:"+name+";DB_CLOSE_DELAY=-1", "sa", "")
     );
   }
 
-  static int sql(Connection connection, String sql) {
+  public static int sql(Connection connection, String sql) {
     return ex(() -> {
       try (var st = connection.prepareStatement(sql)) {
         return st.executeUpdate();
@@ -53,7 +53,7 @@ final class TestHelper {
     });
   }
 
-  static void sql(Connection connection, String sql, Consumer<ResultSet> consumer) {
+  public static void sql(Connection connection, String sql, Consumer<ResultSet> consumer) {
     ex(() -> {
       try (var st = connection.prepareStatement(sql)) {
         try (var rs = st.executeQuery()) {

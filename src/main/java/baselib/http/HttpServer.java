@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package baselib;
+package baselib.http;
 
-import com.sun.net.httpserver.HttpExchange; //NOSONAR
+import static baselib.ExceptionWrapper.ex;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
-import static baselib.ExceptionWrapper.ex;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;

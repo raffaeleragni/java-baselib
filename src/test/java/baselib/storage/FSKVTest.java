@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package baselib;
+package baselib.storage;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
  * @author Raffaele Ragni
  */
 class FSKVTest {
+  public record TestRecordForFSKV(String uuid, String name) {}
+
   FSKV<TestRecordForFSKV> store;
 
   @BeforeEach
@@ -59,4 +61,4 @@ class FSKVTest {
 
 }
 
-record TestRecordForFSKV(String uuid, String name) {}
+

@@ -13,37 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package baselib;
+package baselib.json;
 
 import static baselib.extra.BenchmarkRun.run;
-import java.io.StringReader;
 import org.openjdk.jmh.annotations.Benchmark;
 
 /**
  *
  * @author Raffaele Ragni
  */
-public class JSONReaderBenchmark {
+public class JSONBuilderBenchmark {
+  public record TestRecord(int id, String name) {}
+
   public static void main(String[] args) {
-    run(JSONReaderBenchmark.class);
+    run(JSONBuilderBenchmark.class);
   }
 
   @Benchmark
   public void runManual() {
-    try (var r = new JSONReader(new StringReader(JSON))) {
-      r.toObject();
-    }
+    var b = new JSONBuilder();
+    b.beginArray();
+    for (int i = 0; i < 10; i++)
+      addItem(b);
+    b.endArray();
+  }
+
+  void addItem(JSONBuilder b) {
+    b.beginObject();
+    b.property("id");
+    b.value(1);
+    b.property("name");
+    b.value("hello");
+    b.endObject();
   }
 
   @Benchmark
-  public void intoRecord() {
-    try (var r = new JSONReader(new StringReader(JSON))) {
-      r.toRecordList(TestRecord.class);
-    }
+  public void runRecord() {
+    var b = new JSONBuilder();
+    b.beginArray();
+    for (int i = 0; i < 10; i++)
+      b.value(new TestRecord(1, "test"));
+    b.endArray();
   }
-
-  private static final String JSON = """
-                                     [{"id":1, "name":"one", "id":2,"name":"two"}]
-                                     """;
 
 }

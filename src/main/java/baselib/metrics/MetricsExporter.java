@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.metrics;
 
 import static baselib.ExceptionWrapper.ex;
 import java.io.IOException;

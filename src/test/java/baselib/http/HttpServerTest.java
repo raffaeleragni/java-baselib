@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package baselib;
+package baselib.http;
 
 import static baselib.ExceptionWrapper.ex;
-import static baselib.HttpClient.get;
-import static baselib.HttpClient.post;
-import baselib.HttpServer.HttpStatus;
 import static baselib.TestHelper.portOccupied;
+import static baselib.http.HttpClient.get;
+import static baselib.http.HttpClient.post;
+import baselib.http.HttpServer.HttpStatus;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package baselib;
+package baselib.json;
 
-import static baselib.JSONBuilder.toJSON;
+import static baselib.json.JSONBuilder.toJSON;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
