@@ -15,6 +15,7 @@
  */
 package baselib.metrics;
 
+import static java.lang.String.valueOf;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.function.BiConsumer;
@@ -29,13 +30,13 @@ class JVMThreadMetrics implements MetricRegisterable {
   private final ThreadMXBean threads = ManagementFactory.getThreadMXBean();
 
   @Override
-  public void register(BiConsumer<String, Supplier<Object>> registerFunction) {
-    registerFunction.accept("jvm_threads_current", () -> threads.getThreadCount());
-    registerFunction.accept("jvm_threads_daemon", () -> threads.getDaemonThreadCount());
-    registerFunction.accept("jvm_threads_peak", () -> threads.getPeakThreadCount());
-    registerFunction.accept("jvm_threads_started_total", () -> threads.getTotalStartedThreadCount());
-    registerFunction.accept("jvm_threads_deadlocked", () -> len(threads.findDeadlockedThreads()));
-    registerFunction.accept("jvm_threads_deadlocked_monitor", () -> len(threads.findMonitorDeadlockedThreads()));
+  public void register(BiConsumer<String, Supplier<String>> registerFunction) {
+    registerFunction.accept("jvm_threads_current", () -> valueOf(threads.getThreadCount()));
+    registerFunction.accept("jvm_threads_daemon", () -> valueOf(threads.getDaemonThreadCount()));
+    registerFunction.accept("jvm_threads_peak", () -> valueOf(threads.getPeakThreadCount()));
+    registerFunction.accept("jvm_threads_started_total", () -> valueOf(threads.getTotalStartedThreadCount()));
+    registerFunction.accept("jvm_threads_deadlocked", () -> valueOf(len(threads.findDeadlockedThreads())));
+    registerFunction.accept("jvm_threads_deadlocked_monitor", () -> valueOf(len(threads.findMonitorDeadlockedThreads())));
   }
 
   private static long len(long[] arr) {

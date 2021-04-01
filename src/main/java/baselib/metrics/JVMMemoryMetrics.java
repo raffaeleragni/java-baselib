@@ -15,6 +15,7 @@
  */
 package baselib.metrics;
 
+import static java.lang.String.valueOf;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.function.BiConsumer;
@@ -29,14 +30,14 @@ class JVMMemoryMetrics implements MetricRegisterable {
   private final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
 
   @Override
-  public void register(BiConsumer<String, Supplier<Object>> registerFunction) {
-    registerFunction.accept("jvm_memory_bytes_used{area=\"heap\"}", () -> memory.getHeapMemoryUsage().getUsed());
-    registerFunction.accept("jvm_memory_bytes_used{area=\"nonheap\"}", () -> memory.getNonHeapMemoryUsage().getUsed());
-    registerFunction.accept("jvm_memory_bytes_committed{area=\"heap\"}", () -> memory.getHeapMemoryUsage().getCommitted());
-    registerFunction.accept("jvm_memory_bytes_committed{area=\"nonheap\"}", () -> memory.getNonHeapMemoryUsage().getCommitted());
-    registerFunction.accept("jvm_memory_bytes_max{area=\"heap\"}", () -> memory.getHeapMemoryUsage().getMax());
-    registerFunction.accept("jvm_memory_bytes_max{area=\"nonheap\"}", () -> memory.getNonHeapMemoryUsage().getMax());
-    registerFunction.accept("jvm_memory_bytes_init{area=\"heap\"}", () -> memory.getHeapMemoryUsage().getInit());
-    registerFunction.accept("jvm_memory_bytes_init{area=\"nonheap\"}", () -> memory.getNonHeapMemoryUsage().getInit());
+  public void register(BiConsumer<String, Supplier<String>> registerFunction) {
+    registerFunction.accept("jvm_memory_bytes_used{area=\"heap\"}", () -> valueOf(memory.getHeapMemoryUsage().getUsed()));
+    registerFunction.accept("jvm_memory_bytes_used{area=\"nonheap\"}", () -> valueOf(memory.getNonHeapMemoryUsage().getUsed()));
+    registerFunction.accept("jvm_memory_bytes_committed{area=\"heap\"}", () -> valueOf(memory.getHeapMemoryUsage().getCommitted()));
+    registerFunction.accept("jvm_memory_bytes_committed{area=\"nonheap\"}", () -> valueOf(memory.getNonHeapMemoryUsage().getCommitted()));
+    registerFunction.accept("jvm_memory_bytes_max{area=\"heap\"}", () -> valueOf(memory.getHeapMemoryUsage().getMax()));
+    registerFunction.accept("jvm_memory_bytes_max{area=\"nonheap\"}", () -> valueOf(memory.getNonHeapMemoryUsage().getMax()));
+    registerFunction.accept("jvm_memory_bytes_init{area=\"heap\"}", () -> valueOf(memory.getHeapMemoryUsage().getInit()));
+    registerFunction.accept("jvm_memory_bytes_init{area=\"nonheap\"}", () -> valueOf(memory.getNonHeapMemoryUsage().getInit()));
   }
 }

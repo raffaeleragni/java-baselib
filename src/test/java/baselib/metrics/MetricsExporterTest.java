@@ -69,6 +69,16 @@ class MetricsExporterTest {
     assertThat(metrics, containsString("jvm_threads_deadlocked_monitor "));
   }
 
+  @Test
+  void testNumericParseable() {
+    String metrics = exportMetrics();
+
+    for (String line: metrics.split("\\n")) {
+      var value = line.split(" ")[1];
+      Double.parseDouble(value);
+    }
+  }
+
   private String exportMetrics() {
     var sw = new StringWriter();
     exporter.export(sw);

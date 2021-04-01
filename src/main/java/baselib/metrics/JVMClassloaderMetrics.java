@@ -15,6 +15,7 @@
  */
 package baselib.metrics;
 
+import static java.lang.String.valueOf;
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.function.BiConsumer;
@@ -29,9 +30,9 @@ class JVMClassloaderMetrics implements MetricRegisterable {
   private final ClassLoadingMXBean classload = ManagementFactory.getClassLoadingMXBean();
 
   @Override
-  public void register(BiConsumer<String, Supplier<Object>> registerFunction) {
-    registerFunction.accept("jvm_classes_loaded", () -> classload.getLoadedClassCount());
-    registerFunction.accept("jvm_classes_loaded_total", () -> classload.getTotalLoadedClassCount());
-    registerFunction.accept("jvm_classes_unloaded_total", () -> classload.getUnloadedClassCount());
+  public void register(BiConsumer<String, Supplier<String>> registerFunction) {
+    registerFunction.accept("jvm_classes_loaded", () -> valueOf(classload.getLoadedClassCount()));
+    registerFunction.accept("jvm_classes_loaded_total", () -> valueOf(classload.getTotalLoadedClassCount()));
+    registerFunction.accept("jvm_classes_unloaded_total", () -> valueOf(classload.getUnloadedClassCount()));
   }
 }

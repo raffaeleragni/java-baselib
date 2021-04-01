@@ -23,5 +23,5 @@ import java.util.function.Supplier;
  * @author Raffaele Ragni
  */
 public interface MetricRegisterable {
-  void register(BiConsumer<String, Supplier<Object>> registerFunction);
+  void register(BiConsumer<String, Supplier<String>> registerFunction);
 }

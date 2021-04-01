@@ -32,11 +32,11 @@ public class MetricsExporter {
   public static final MetricsExporter DEFAULT = new MetricsExporter();
 
   private final Map<String, Supplier<String>> metricPrinters;
-  private final BiConsumer<String, Supplier<Object>> registerFunction;
+  private final BiConsumer<String, Supplier<String>> registerFunction;
 
   public MetricsExporter() {
     metricPrinters = new HashMap<>();
-    registerFunction = (name, value) -> metricPrinters.put(name, () -> value.toString());
+    registerFunction = (name, value) -> metricPrinters.put(name, value);
     registerJVMMetrics();
   }
 
@@ -45,7 +45,11 @@ public class MetricsExporter {
   }
 
   public void export(Writer writer) {
-    metricPrinters.forEach((name, value) -> ex(() -> writeMetric(writer, name, value.get())));
+    metricPrinters.forEach((name, value) -> printMetric(writer, name, value.get()));
+  }
+
+  private void printMetric(Writer writer, String name, String value) {
+    ex(() -> writeMetric(writer, name, value.toString()));
   }
 
   private void registerJVMMetrics() {
