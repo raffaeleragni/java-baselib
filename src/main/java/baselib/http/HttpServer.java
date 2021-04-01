@@ -16,6 +16,7 @@
 package baselib.http;
 
 import static baselib.ExceptionWrapper.ex;
+import baselib.metrics.MetricsExporter;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -24,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -48,12 +50,14 @@ public final class HttpServer {
   private HttpServer(
       final int serverPort,
       final int threads,
-      final Map<String, Function<Context, String>> handlers) {
+      Map<String, Function<Context, String>> handlers) {
 
     this.port = serverPort;
     this.server = ex(() -> //NOSONAR
         com.sun.net.httpserver.HttpServer.create()); //NOSONAR
     this.server.setExecutor(Executors.newFixedThreadPool(threads));
+    handlers = new HashMap<>(handlers);
+    autoAddMetricsEndpoint(handlers);
     Objects.requireNonNull(handlers.entrySet())
       .stream()
       .filter(e -> Objects.nonNull(e.getValue()))
@@ -61,6 +65,14 @@ public final class HttpServer {
         server.createContext(e.getKey(), exchange ->
             wrapExchange(e.getKey(), exchange, e.getValue()))
       );
+  }
+
+  private void autoAddMetricsEndpoint(Map<String, Function<Context, String>> handlers) {
+    if (!handlers.containsKey("/metrics"))
+      handlers.put("/metrics", c -> {
+        c.writer(out -> MetricsExporter.DEFAULT.export(out));
+        return "";
+      });
   }
 
   /**

@@ -64,6 +64,21 @@ class HttpServerTest {
 
       assertThat(get(url+"/exception").statusCode(), is(500));
       assertThat(get(url+"/500").statusCode(), is(500));
+
+      assertThat(get(url+"/metrics").statusCode(), is(200));
+    });
+  }
+
+  @Test
+  void testMetricsOverride() {
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, THREADS, Map.of(
+      "/metrics", ctx -> "mymetrics"
+    ));
+
+    withServer(server, () -> {
+      assertThat(get(url+"/metrics").statusCode(), is(200));
+      assertThat(get(url+"/metrics").body(), is("mymetrics"));
     });
   }
 
