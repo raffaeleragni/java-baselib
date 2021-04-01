@@ -16,6 +16,7 @@
 package baselib.http;
 
 import static baselib.ExceptionWrapper.ex;
+import baselib.metrics.MetricRegisterable;
 import baselib.metrics.MetricsExporter;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.BufferedReader;
@@ -23,14 +24,18 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import static java.lang.String.valueOf;
 import java.net.InetSocketAddress;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,10 +66,7 @@ public final class HttpServer {
     Objects.requireNonNull(handlers.entrySet())
       .stream()
       .filter(e -> Objects.nonNull(e.getValue()))
-      .forEach(e ->
-        server.createContext(e.getKey(), exchange ->
-            wrapExchange(e.getKey(), exchange, e.getValue()))
-      );
+      .forEach(this::registerRequest);
   }
 
   private void autoAddMetricsEndpoint(Map<String, Function<Context, String>> handlers) {
@@ -73,6 +75,16 @@ public final class HttpServer {
         c.writer(out -> MetricsExporter.DEFAULT.export(out));
         return "";
       });
+  }
+
+  private void registerRequest(Map.Entry<String, Function<Context, String>> entry) {
+    var uri = entry.getKey();
+    var endpoint = entry.getValue();
+
+    var metric = new RequestLifecycleMetrics(uri);
+    MetricsExporter.DEFAULT.register(metric);
+
+    server.createContext(uri, exchange -> metric.wrap(() -> wrapExchange(uri, exchange, endpoint)));
   }
 
   /**
@@ -84,9 +96,10 @@ public final class HttpServer {
    * Future implementations may extend that feature.
    *
    * @param serverPort the port that the server will bind to.
+   * @param threads number of threads that the server will use to serve requests, this is equivalent of workers.
    * @param handlers the http handlers to be mapped: key is the uri and value is
    *                 the lambda that is executed on that uri
-   * @return
+   * @return the configured server instance, you still need to call the start() or stop() yourself on that.
    */
   public static HttpServer create(final int serverPort,
       final int threads,
@@ -300,6 +313,49 @@ public final class HttpServer {
             new OutputStreamWriter(exchange.getResponseBody(), UTF_8))) {
           writer.accept(out);
         }
+      });
+    }
+  }
+
+  private static class RequestLifecycleMetrics implements MetricRegisterable {
+
+    private final String uri;
+    private final AtomicLong counter = new AtomicLong();
+    private final AtomicLong timeSum = new AtomicLong();
+    private final AtomicLong timeMin = new AtomicLong(Long.MAX_VALUE);
+    private final AtomicLong timeMax = new AtomicLong(Long.MIN_VALUE);
+
+    RequestLifecycleMetrics(String uri) {
+      this.uri = uri;
+    }
+
+    void wrap(Runnable action) {
+      var nanos = System.nanoTime();
+      try {
+        action.run();
+      } finally {
+        measure(System.nanoTime() - nanos);
+      }
+    }
+
+    void measure(long nanos) {
+      counter.incrementAndGet();
+      timeSum.addAndGet(nanos);
+      timeMin.getAndUpdate(x -> nanos < x ? nanos : x);
+      timeMax.getAndUpdate(x -> nanos > x ? nanos : x);
+    }
+
+    @Override
+    public void register(BiConsumer<String, Supplier<String>> registerFunction) {
+      registerFunction.accept("http_request_count{uri=\""+uri+"\"}", () -> counter.toString());
+      registerFunction.accept("http_request_nanos_sum{uri=\""+uri+"\"}", () -> timeSum.toString());
+      registerFunction.accept("http_request_nanos_min{uri=\""+uri+"\"}", () -> {
+        var x = timeMin.get();
+        return x == Long.MAX_VALUE ? "0" : valueOf(x);
+      });
+      registerFunction.accept("http_request_nanos_max{uri=\""+uri+"\"}", () -> {
+        var x = timeMax.get();
+        return x == Long.MIN_VALUE ? "0" : valueOf(x);
       });
     }
   }

@@ -19,7 +19,7 @@ package baselib.metrics;
 import static baselib.ExceptionWrapper.ex;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -35,7 +35,7 @@ public class MetricsExporter {
   private final BiConsumer<String, Supplier<String>> registerFunction;
 
   public MetricsExporter() {
-    metricPrinters = new HashMap<>();
+    metricPrinters = new LinkedHashMap<>();
     registerFunction = (name, value) -> metricPrinters.put(name, value);
     registerJVMMetrics();
   }
