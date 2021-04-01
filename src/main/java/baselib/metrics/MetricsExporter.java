@@ -19,11 +19,10 @@ package baselib.metrics;
 import static baselib.ExceptionWrapper.ex;
 import java.io.IOException;
 import java.io.Writer;
-import static java.lang.String.valueOf;
-import java.lang.management.ClassLoadingMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.ThreadMXBean;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 /**
  *
@@ -32,58 +31,33 @@ import java.lang.management.ThreadMXBean;
 public class MetricsExporter {
   public static final MetricsExporter DEFAULT = new MetricsExporter();
 
-  private final MemoryMXBean memory;
-  private final ClassLoadingMXBean classload;
-  private final ThreadMXBean threads;
+  private final Map<String, Supplier<String>> metricPrinters;
+  private final BiConsumer<String, Supplier<Object>> registerFunction;
 
   public MetricsExporter() {
-    this.memory = ManagementFactory.getMemoryMXBean();
-    this.classload = ManagementFactory.getClassLoadingMXBean();
-    this.threads = ManagementFactory.getThreadMXBean();
+    metricPrinters = new HashMap<>();
+    registerFunction = (name, value) -> metricPrinters.put(name, () -> value.toString());
+    registerJVMMetrics();
+  }
+
+  public void register(MetricRegisterable registerable) {
+    registerable.register(registerFunction);
   }
 
   public void export(Writer writer) {
-    ex(() -> appendJVMMetrics(writer));
-    ex(() -> appendClassLoaderMetrics(writer));
-    ex(() -> appendThreadsMetrics(writer));
+    metricPrinters.forEach((name, value) -> ex(() -> writeMetric(writer, name, value.get())));
   }
 
-  private void appendJVMMetrics(Writer writer) throws IOException {
-    var heap = memory.getHeapMemoryUsage();
-    var nonheap = memory.getNonHeapMemoryUsage();
-    writeMetric(writer, "jvm_memory_bytes_used{area=\"heap\"}", heap.getUsed());
-    writeMetric(writer, "jvm_memory_bytes_used{area=\"nonheap\"}", nonheap.getUsed());
-    writeMetric(writer, "jvm_memory_bytes_committed{area=\"heap\"}", heap.getCommitted());
-    writeMetric(writer, "jvm_memory_bytes_committed{area=\"nonheap\"}", nonheap.getCommitted());
-    writeMetric(writer, "jvm_memory_bytes_max{area=\"heap\"}", heap.getMax());
-    writeMetric(writer, "jvm_memory_bytes_max{area=\"nonheap\"}", nonheap.getMax());
-    writeMetric(writer, "jvm_memory_bytes_init{area=\"heap\"}", heap.getInit());
-    writeMetric(writer, "jvm_memory_bytes_init{area=\"nonheap\"}", nonheap.getInit());
+  private void registerJVMMetrics() {
+    new JVMMemoryMetrics().register(registerFunction);
+    new JVMClassloaderMetrics().register(registerFunction);
+    new JVMThreadMetrics().register(registerFunction);
   }
 
-  private void appendClassLoaderMetrics(Writer writer) throws IOException {
-    writeMetric(writer, "jvm_classes_loaded", classload.getLoadedClassCount());
-    writeMetric(writer, "jvm_classes_loaded_total", classload.getTotalLoadedClassCount());
-    writeMetric(writer, "jvm_classes_unloaded_total", classload.getUnloadedClassCount());
-  }
-
-  private void appendThreadsMetrics(Writer writer) throws IOException {
-    writeMetric(writer, "jvm_threads_current", threads.getThreadCount());
-    writeMetric(writer, "jvm_threads_daemon", threads.getDaemonThreadCount());
-    writeMetric(writer, "jvm_threads_peak", threads.getPeakThreadCount());
-    writeMetric(writer, "jvm_threads_started_total", threads.getTotalStartedThreadCount());
-    writeMetric(writer, "jvm_threads_deadlocked", len(threads.findDeadlockedThreads()));
-    writeMetric(writer, "jvm_threads_deadlocked_monitor", len(threads.findMonitorDeadlockedThreads()));
-  }
-
-  private void writeMetric(Writer writer, String metric, long value) throws IOException {
+  private void writeMetric(Writer writer, String metric, String value) throws IOException {
     writer.write(metric);
     writer.write(' ');
-    writer.write(valueOf(value));
+    writer.write(value);
     writer.write('\n');
-  }
-
-  private static long len(long[] arr) {
-    return arr == null ? 0 : arr.length;
   }
 }
