@@ -347,13 +347,13 @@ public final class HttpServer {
 
     @Override
     public void register(BiConsumer<String, Supplier<String>> registerFunction) {
-      registerFunction.accept("http_request_count{uri=\""+uri+"\"}", () -> counter.toString());
-      registerFunction.accept("http_request_nanos_sum{uri=\""+uri+"\"}", () -> timeSum.toString());
-      registerFunction.accept("http_request_nanos_min{uri=\""+uri+"\"}", () -> {
+      registerFunction.accept("httpserver_request_count{uri=\""+uri+"\"}", () -> counter.toString());
+      registerFunction.accept("httpserver_request_nanos_sum{uri=\""+uri+"\"}", () -> timeSum.toString());
+      registerFunction.accept("httpserver_request_nanos_min{uri=\""+uri+"\"}", () -> {
         var x = timeMin.get();
         return x == Long.MAX_VALUE ? "0" : valueOf(x);
       });
-      registerFunction.accept("http_request_nanos_max{uri=\""+uri+"\"}", () -> {
+      registerFunction.accept("httpserver_request_nanos_max{uri=\""+uri+"\"}", () -> {
         var x = timeMax.get();
         return x == Long.MIN_VALUE ? "0" : valueOf(x);
       });
