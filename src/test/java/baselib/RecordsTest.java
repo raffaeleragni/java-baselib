@@ -95,8 +95,8 @@ class RecordsTest {
     "NAME_DIFFERENT",
     "name-different",
     "NAME-DIFFERENT"})
-  void testNameCaseNone() {
-    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "nameDifferent", "test"));
+  void testNameCaseNone(String name) {
+    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, name, "test"));
     var expected = new SampleMoreNames(1, "test");
     assertThat(rec, is(expected));
   }
