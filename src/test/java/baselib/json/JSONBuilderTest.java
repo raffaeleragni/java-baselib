@@ -26,6 +26,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  *
@@ -221,6 +223,21 @@ class JSONBuilderTest {
 
     var result = jb.toString();
     assertThat(result, is("[1,2]"));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "false,false",
+    "false,true",
+    "true,true"
+  })
+  void testComma(boolean comma, boolean prop) {
+    jb.comma = comma;
+    jb.prop = prop;
+    jb.value(1);
+
+    var result = jb.toString();
+    assertThat(result, is("1"));
   }
 }
 

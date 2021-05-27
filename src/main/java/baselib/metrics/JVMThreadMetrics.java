@@ -18,6 +18,7 @@ package baselib.metrics;
 import static java.lang.String.valueOf;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import static java.util.Optional.ofNullable;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -40,6 +41,6 @@ class JVMThreadMetrics implements MetricRegisterable {
   }
 
   private static long len(long[] arr) {
-    return arr == null ? 0 : arr.length;
+    return ofNullable(arr).map(a -> a.length).orElse(0);
   }
 }

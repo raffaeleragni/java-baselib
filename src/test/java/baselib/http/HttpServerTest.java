@@ -20,6 +20,7 @@ import static baselib.TestHelper.portOccupied;
 import static baselib.http.HttpClient.get;
 import static baselib.http.HttpClient.post;
 import baselib.http.HttpServer.HttpStatus;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -54,13 +55,37 @@ class HttpServerTest {
       "/", ctx -> "hello world",
       "/exception", ctx -> {throw new RuntimeException();},
       "/500", ctx -> {throw new HttpStatus(500);},
-      "/nooutput", ctx -> ""
+      "/nooutput", ctx -> "",
+      "/nulloutput", ctx -> null,
+      "/output2", ctx -> {
+        ctx.response("2");
+        ctx.response("blah");
+        return "";},
+      "/output3", ctx -> {
+        ctx.writer(bf -> {
+          try {
+            bf.write("3");
+          } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+          }
+        });
+        ctx.writer(bf -> {
+          try {
+            bf.write("balsh");
+          } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+          }
+        });
+        return "";}
     ));
 
     withServer(server, () -> {
       assertThat(get(url+"/").body(), is("hello world"));
 
       assertThat(get(url+"/nooutput").body(), is(""));
+      assertThat(get(url+"/nulloutput").body(), is(""));
+      assertThat(get(url+"/output2").body(), is("2"));
+      assertThat(get(url+"/output3").body(), is("3"));
 
       assertThat(get(url+"/exception").statusCode(), is(500));
       assertThat(get(url+"/500").statusCode(), is(500));

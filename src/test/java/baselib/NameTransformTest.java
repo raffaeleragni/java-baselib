@@ -75,5 +75,6 @@ class NameTransformTest {
 
   private void assertTransformed(NameTransform transformer, String from, String to) {
     assertThat(transformer.transform(from), is(to));
+    assertThat(transformer.apply(from), is(to));
   }
 }

@@ -29,9 +29,9 @@ import java.util.Optional;
  */
 public final class JSONBuilder {
 
-  private final StringBuilder sb;
-  private boolean comma;
-  private boolean prop;
+  final StringBuilder sb;
+  boolean comma;
+  boolean prop;
 
   public JSONBuilder() {
     this.sb = new StringBuilder();
@@ -128,9 +128,6 @@ public final class JSONBuilder {
   private void doRecord(Object o) {
     beginObject();
     for (var e: o.getClass().getRecordComponents()) {
-      if (!e.getAccessor().canAccess(o))
-        continue;
-
       Object value = ex(() -> e.getAccessor().invoke(o));
       if (value != null) {
         property(e.getName());
