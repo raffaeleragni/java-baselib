@@ -18,6 +18,8 @@ package baselib.json;
 
 import static baselib.json.JSONReader.toObject;
 import static baselib.json.JSONReader.toRecord;
+import java.io.IOException;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  *
@@ -160,6 +164,15 @@ class JSONReaderTest {
       new JsonRecord(2, "test2"),
       new JsonRecord(3, "test3")
     )));
+  }
+
+  @Test
+  void testCloseCalled() throws IOException {
+    var reader = mock(Reader.class);
+    var jreader = new JSONReader(reader);
+
+    jreader.close();
+    verify(reader).close();
   }
 }
 

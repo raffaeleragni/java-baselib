@@ -18,6 +18,9 @@ package baselib.metrics;
 
 import java.io.StringWriter;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +78,8 @@ class MetricsExporterTest {
 
     for (String line: metrics.split("\\n")) {
       var value = line.split(" ")[1];
-      Double.parseDouble(value);
+      var d = Double.parseDouble(value);
+      assertThat(d, is(not(nullValue())));
     }
   }
 

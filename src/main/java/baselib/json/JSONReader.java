@@ -52,7 +52,7 @@ public class JSONReader implements AutoCloseable {
 
   @Override
   public void close() {
-    ex(() -> reader.close());
+    ex(reader::close);
   }
 
   public static Object toObject(final String string) {

@@ -111,16 +111,20 @@ public final class HttpClient {
 
     @Override
     public void register(BiConsumer<String, Supplier<String>> registerFunction) {
-      registerFunction.accept("httpclient_request_count{uri=\""+uri+"\",method=\""+method+"\"}", () -> counter.toString());
-      registerFunction.accept("httpclient_request_nanos_sum{uri=\""+uri+"\",method=\""+method+"\"}", () -> timeSum.toString());
-      registerFunction.accept("httpclient_request_nanos_min{uri=\""+uri+"\",method=\""+method+"\"}", () -> {
+      registerFunction.accept(makeMetricLabel("httpclient_request_count", uri, method), counter::toString);
+      registerFunction.accept(makeMetricLabel("httpclient_request_nanos_sum", uri, method), timeSum::toString);
+      registerFunction.accept(makeMetricLabel("httpclient_request_nanos_min", uri, method), () -> {
         var x = timeMin.get();
         return x == Long.MAX_VALUE ? "0" : valueOf(x);
       });
-      registerFunction.accept("httpclient_request_nanos_max{uri=\""+uri+"\",method=\""+method+"\"}", () -> {
+      registerFunction.accept(makeMetricLabel("httpclient_request_nanos_max", uri, method), () -> {
         var x = timeMax.get();
         return x == Long.MIN_VALUE ? "0" : valueOf(x);
       });
+    }
+
+    static String makeMetricLabel(String name, String uri, String method) {
+      return name+"{uri=\""+uri+"\",method=\""+method+"\"}";
     }
 
   }

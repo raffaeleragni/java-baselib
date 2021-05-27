@@ -25,8 +25,8 @@ public class Env {
     String name();
   }
 
-  public String get(Var var) {
-    var value = System.getProperty(var.name());
+  public String get(Var envVar) {
+    var value = System.getProperty(envVar.name());
     if (value != null) {
       return value;
     }
@@ -40,7 +40,7 @@ public class Env {
     // If you plan to use this application outside docker, then it would be best if
     // this line is removed and the getProperty becomes the only way to receive properties
     // using the command line options, or find alternative ways to load variables.
-    return System.getenv(var.name());//NOSONAR
+    return System.getenv(envVar.name());//NOSONAR
   }
 
 }

@@ -154,12 +154,12 @@ public final class JSONBuilder {
     beginArray();
     if (o.getClass().getComponentType().isPrimitive()) {
       int length = Array.getLength(o);
-      for (int i = 0; i < length; i++) {
+      for (var i = 0; i < length; i++) {
         value(Array.get(o, i));
       }
     } else {
       Object[] objects = (Object[]) o;
-      for (Object obj : objects) {
+      for (var obj : objects) {
         if (obj != null)
           value(obj);
       }

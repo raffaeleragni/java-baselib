@@ -17,12 +17,15 @@
 package baselib;
 
 import static baselib.Records.fromMap;
+import java.util.HashMap;
 import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  *
@@ -36,8 +39,9 @@ class RecordsTest {
 
   @Test
   void testNoRecord() {
+    var o = new Object();
     assertThrows(IllegalArgumentException.class, () -> {
-      Records.toMap(new Object());
+      Records.toMap(o);
     });
   }
 
@@ -64,7 +68,8 @@ class RecordsTest {
 
   @Test
   void testToNotRecord() {
-    assertThrows(IllegalArgumentException.class, () -> fromMap(Object.class, Map.of()));
+    var map = new HashMap<String, Object>();
+    assertThrows(IllegalArgumentException.class, () -> fromMap(Object.class, map));
   }
 
   @Test
@@ -83,37 +88,15 @@ class RecordsTest {
     assertThat(Records.fromMap(Nested.class, map), is(expected));
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "nameDifferent",
+    "name_different",
+    "NAME_DIFFERENT",
+    "name-different",
+    "NAME-DIFFERENT"})
   void testNameCaseNone() {
     var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "nameDifferent", "test"));
-    var expected = new SampleMoreNames(1, "test");
-    assertThat(rec, is(expected));
-  }
-
-  @Test
-  void testNameCaseSnake() {
-    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "name_different", "test"));
-    var expected = new SampleMoreNames(1, "test");
-    assertThat(rec, is(expected));
-  }
-
-  @Test
-  void testNameCaseSnakeUpper() {
-    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "NAME_DIFFERENT", "test"));
-    var expected = new SampleMoreNames(1, "test");
-    assertThat(rec, is(expected));
-  }
-
-  @Test
-  void testNameKebab() {
-    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "name-different", "test"));
-    var expected = new SampleMoreNames(1, "test");
-    assertThat(rec, is(expected));
-  }
-
-  @Test
-  void testNameKebabUpper() {
-    var rec = Records.fromMap(SampleMoreNames.class, Map.of("id", 1, "NAME-DIFFERENT", "test"));
     var expected = new SampleMoreNames(1, "test");
     assertThat(rec, is(expected));
   }

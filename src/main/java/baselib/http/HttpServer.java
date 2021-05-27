@@ -18,7 +18,7 @@ package baselib.http;
 import static baselib.ExceptionWrapper.ex;
 import baselib.metrics.MetricRegisterable;
 import baselib.metrics.MetricsExporter;
-import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpExchange;//NOSONAR
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -72,7 +72,7 @@ public final class HttpServer {
   private void autoAddMetricsEndpoint(Map<String, Function<Context, String>> handlers) {
     if (!handlers.containsKey("/metrics"))
       handlers.put("/metrics", c -> {
-        c.writer(out -> MetricsExporter.DEFAULT.export(out));
+        c.writer(MetricsExporter.DEFAULT::export);
         return "";
       });
   }
@@ -347,16 +347,19 @@ public final class HttpServer {
 
     @Override
     public void register(BiConsumer<String, Supplier<String>> registerFunction) {
-      registerFunction.accept("httpserver_request_count{uri=\""+uri+"\"}", () -> counter.toString());
-      registerFunction.accept("httpserver_request_nanos_sum{uri=\""+uri+"\"}", () -> timeSum.toString());
-      registerFunction.accept("httpserver_request_nanos_min{uri=\""+uri+"\"}", () -> {
+      registerFunction.accept(makeMetricLabel("httpserver_request_count", uri), counter::toString);
+      registerFunction.accept(makeMetricLabel("httpserver_request_nanos_sum", uri), timeSum::toString);
+      registerFunction.accept(makeMetricLabel("httpserver_request_nanos_min", uri), () -> {
         var x = timeMin.get();
         return x == Long.MAX_VALUE ? "0" : valueOf(x);
       });
-      registerFunction.accept("httpserver_request_nanos_max{uri=\""+uri+"\"}", () -> {
+      registerFunction.accept(makeMetricLabel("httpserver_request_nanos_max", uri), () -> {
         var x = timeMax.get();
         return x == Long.MIN_VALUE ? "0" : valueOf(x);
       });
+    }
+    static String makeMetricLabel(String name, String uri) {
+      return name+"{uri=\""+uri+"\"}";
     }
   }
 }

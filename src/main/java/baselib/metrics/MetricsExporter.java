@@ -36,7 +36,7 @@ public class MetricsExporter {
 
   public MetricsExporter() {
     metricPrinters = new LinkedHashMap<>();
-    registerFunction = (name, value) -> metricPrinters.put(name, value);
+    registerFunction = metricPrinters::put;
     registerJVMMetrics();
   }
 
@@ -49,7 +49,7 @@ public class MetricsExporter {
   }
 
   private void printMetric(Writer writer, String name, String value) {
-    ex(() -> writeMetric(writer, name, value.toString()));
+    ex(() -> writeMetric(writer, name, value));
   }
 
   private void registerJVMMetrics() {
