@@ -18,9 +18,14 @@ package baselib.storage;
 import static baselib.ExceptionWrapper.ex;
 import static baselib.json.JSONBuilder.toJSON;
 import static baselib.json.JSONReader.toRecord;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * File system based key-value store.
@@ -57,13 +62,19 @@ public class FSKV<V> {
       throw new IllegalArgumentException("Path is not absolute");
   }
 
-  public V get(String uuid) {
-    Objects.requireNonNull(uuid);
+  public Optional<V> get(String uuid) {
+    try {
+      Objects.requireNonNull(uuid);
 
-    var itemPath = dir.resolve(uuid + EXTENSION).normalize();
-    ensureNotParented(itemPath);
+      var itemPath = dir.resolve(uuid + EXTENSION).normalize();
+      ensureNotParented(itemPath);
 
-    var itemString = ex(() -> Files.readString(itemPath));
-    return toRecord(clazz, itemString);
+      var itemString = Files.readString(itemPath);
+      return of(toRecord(clazz, itemString));
+    } catch (NoSuchFileException ex) {
+      return empty();
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 }

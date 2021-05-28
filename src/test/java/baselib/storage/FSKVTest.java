@@ -45,7 +45,7 @@ class FSKVTest {
 
     store.put(rec.uuid(), rec);
 
-    var rec2 = store.get(rec.uuid());
+    var rec2 = store.get(rec.uuid()).get();
 
     assertThat(rec, is(rec2));
   }
