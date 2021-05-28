@@ -143,6 +143,12 @@ public final class HttpServer {
     String body();
 
     /**
+     *
+     * @return http request method as string (ex get, post etc.)
+     */
+    String method();
+
+    /**
      * Write a string as a response.
      * After this function the response will be in status 200 and the output
      * will be closed, ending the response.
@@ -228,6 +234,7 @@ public final class HttpServer {
 
   private static class ContextImpl implements Context {
 
+    private final String method;
     private final String path;
     private final String variablePath;
     private final HttpExchange exchange;
@@ -239,6 +246,7 @@ public final class HttpServer {
 
       this.path = originalMappedPath;
       this.exchange = httpExchange;
+      this.method = exchange.getRequestMethod();
       var extraPath = exchange
           .getRequestURI()
           .getPath()
@@ -296,6 +304,11 @@ public final class HttpServer {
 
     boolean responseSent() {
       return responseSent;
+    }
+
+    @Override
+    public String method() {
+      return method.toUpperCase();
     }
 
     private <T> T consumeReader(final Function<BufferedReader, T> reader) {

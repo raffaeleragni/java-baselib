@@ -133,6 +133,25 @@ class HttpServerTest {
   }
 
   @Test
+  void testMethods() {
+    var methods = new HashSet<String>();
+    var url = "http://localhost:"+PORT;
+    var server = HttpServer.create(PORT, THREADS, Map.of(
+      "/test", ctx -> {
+        methods.add(ctx.method());
+        return "";
+      }
+    ));
+
+    withServer(server, () -> {
+      get(url+"/test");
+      post(url+"/test", "");
+
+      assertThat(methods, is(Set.of("GET", "POST")));
+    });
+  }
+
+  @Test
   void testStringProducer() {
     var url = "http://localhost:"+PORT;
     var server = HttpServer.create(PORT, THREADS, Map.of(
