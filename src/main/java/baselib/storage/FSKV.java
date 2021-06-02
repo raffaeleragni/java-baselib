@@ -18,7 +18,6 @@ package baselib.storage;
 import static baselib.ExceptionWrapper.ex;
 import static baselib.json.JSONBuilder.toJSON;
 import static baselib.json.JSONReader.toRecord;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -63,18 +62,18 @@ public class FSKV<V> {
   }
 
   public Optional<V> get(String uuid) {
-    try {
-      Objects.requireNonNull(uuid);
+    return ex(() -> {
+      try {
+        Objects.requireNonNull(uuid);
 
-      var itemPath = dir.resolve(uuid + EXTENSION).normalize();
-      ensureNotParented(itemPath);
+        var itemPath = dir.resolve(uuid + EXTENSION).normalize();
+        ensureNotParented(itemPath);
 
-      var itemString = Files.readString(itemPath);
-      return of(toRecord(clazz, itemString));
-    } catch (NoSuchFileException ex) {
-      return empty();
-    } catch (IOException ex) {
-      throw new IllegalStateException(ex);
-    }
+        var itemString = Files.readString(itemPath);
+        return of(toRecord(clazz, itemString));
+      } catch (NoSuchFileException ex) {
+        return empty();
+      }
+    });
   }
 }

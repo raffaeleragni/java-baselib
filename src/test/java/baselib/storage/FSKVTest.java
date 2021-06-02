@@ -16,6 +16,7 @@
 package baselib.storage;
 
 import java.nio.file.Path;
+import static java.util.Optional.empty;
 import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -56,7 +57,12 @@ class FSKVTest {
 
     assertThrows(IllegalArgumentException.class, () -> store.put("../a", rec));
 
-    assertThrows(IllegalArgumentException.class, () -> store.get("../a"));
+    assertThrows(IllegalStateException.class, () -> store.get("../a"));
+  }
+
+  @Test
+  void testNotFound() {
+    assertThat(store.get("nonexistantfile"), is(empty()));
   }
 
 }

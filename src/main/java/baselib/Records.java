@@ -35,18 +35,16 @@ public final class Records {
 
   public static Map<String, Object> toMap(Object rec) {
     Objects.requireNonNull(rec);
-    var result = new HashMap<String, Object>();
-    if (!rec.getClass().isRecord())
-      throw new IllegalArgumentException();
+    if (!isRecord(rec))
+      throw recordRequiredException();
 
-    for (var e: rec.getClass().getRecordComponents()) {
-      if (!e.getAccessor().canAccess(rec))
-        continue;
-      var value = ex(() -> e.getAccessor().invoke(rec));
-      if (value.getClass().isRecord())
-        result.put(e.getName(), toMap(value));
+    var result = new HashMap<String, Object>();
+    for (var field: getRecordFields(rec)) {
+      var value = getFieldValue(field, rec);
+      if (isRecord(value))
+        result.put(field.getName(), toMap(value));
       else
-        result.put(e.getName(), value);
+        result.put(field.getName(), value);
     }
 
     return result;
@@ -62,13 +60,13 @@ public final class Records {
     if (fetch == null)
       return null;
     if (!clazz.isRecord())
-      throw new IllegalArgumentException();
+      throw recordRequiredException();
 
     var params = new LinkedList<Object>();
     var types = new LinkedList<Class<?>>();
-    for (var e: clazz.getRecordComponents()) {
-      var type = e.getType();
-      var value = getValueWithDifferentPropertyNameStyles(fetch, e);
+    for (var field: getDeclaredFields(clazz)) {
+      var type = field.getType();
+      var value = getValueWithNameCases(fetch, field);
       types.add(type);
       if (type.isRecord() && value instanceof Map m)
         params.add(fromMap(type, m));
@@ -81,7 +79,7 @@ public final class Records {
     return ex(() -> constructor.newInstance(params.toArray()));
   }
 
-  static Object getValueWithDifferentPropertyNameStyles(Function<String, Object> fetch, RecordComponent e) {
+  static Object getValueWithNameCases(Function<String, Object> fetch, RecordComponent e) {
     var value = fetch.apply(e.getName());
     if (value != null)
       return value;
@@ -103,5 +101,25 @@ public final class Records {
     value = fetch.apply(kebabName.toUpperCase());
 
     return value;
+  }
+
+  static boolean isRecord(Object value) {
+    return value.getClass().isRecord();
+  }
+
+  static RecordComponent[] getRecordFields(Object rec) {
+    return getDeclaredFields(rec.getClass());
+  }
+
+  static Object getFieldValue(RecordComponent field, Object rec) {
+    return ex(() -> field.getAccessor().invoke(rec));
+  }
+
+  static IllegalArgumentException recordRequiredException() {
+    return new IllegalArgumentException("Required a java record");
+  }
+
+  static RecordComponent[] getDeclaredFields(Class<?> clazz) {
+    return clazz.getRecordComponents();
   }
 }

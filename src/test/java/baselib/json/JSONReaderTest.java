@@ -21,6 +21,7 @@ import static baselib.json.JSONReader.toRecord;
 import java.io.IOException;
 import java.io.Reader;
 import java.math.BigDecimal;
+import static java.util.Collections.emptyMap;
 import java.util.List;
 import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,6 +73,12 @@ class JSONReaderTest {
   }
 
   @Test
+  void testNonJSONS() {
+    assertThrows(IllegalStateException.class, () -> toObject("{1}"));
+    assertThrows(IllegalStateException.class, () -> toObject("{\"a\"15}"));
+  }
+
+  @Test
   void testArrays() {
     assertThat(toObject("[1, 2, 3]"), is(List.of(1, 2, 3)));
   }
@@ -81,10 +88,11 @@ class JSONReaderTest {
     assertThat(toObject("""
                         {
                           "a": "b",
-                          "c": 1
+                          "c": 1,
+                          "d": """+Long.MAX_VALUE+"""
                         }
                         """),
-        is(Map.of("a", "b", "c", 1)));
+        is(Map.of("a", "b", "c", 1, "d", Long.MAX_VALUE)));
 
 
     assertThat(toObject("""
@@ -106,6 +114,9 @@ class JSONReaderTest {
     assertThrows(IllegalArgumentException.class, () -> {
       JSONReader.toRecord(Object.class, "");
     });
+    assertThrows(IllegalArgumentException.class, () -> {
+      JSONReader.toRecordList(Object.class, "");
+    });
   }
 
   @Test
@@ -119,6 +130,16 @@ class JSONReaderTest {
     """);
 
     assertThat(rec, is(new JsonRecord(1, "test")));
+  }
+
+  @Test
+  void testInvalidJsonOnRecord() {
+    assertThrows(IllegalStateException.class, () -> {
+      JSONReader.toRecord(JsonRecord.class, "}");
+    });
+    assertThrows(IllegalStateException.class, () -> {
+      JSONReader.toRecord(JsonRecord.class, "{}");
+    });
   }
 
   @Test
@@ -156,7 +177,8 @@ class JSONReaderTest {
      }, {
        "id": 3,
        "name": "test3"
-     }]
+     },
+     {}]
     """);
 
     assertThat(rec, is(List.of(
@@ -173,6 +195,18 @@ class JSONReaderTest {
 
     jreader.close();
     verify(reader).close();
+  }
+
+  @Test
+  void testRecordChecker() {
+    assertThat(JSONReader.isNotRecord(null), is(true));
+    assertThat(JSONReader.isNotRecord(Object.class), is(true));
+  }
+
+  @Test
+  void testIsEmptyMap() {
+    assertThat(JSONReader.isEmptyMap(null), is(true));
+    assertThat(JSONReader.isEmptyMap(emptyMap()), is(true));
   }
 }
 

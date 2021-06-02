@@ -76,41 +76,45 @@ public class JSONReader implements AutoCloseable {
   }
 
   public <T> T toRecord(Class<T> clazz) {
-    if (clazz == null || !clazz.isRecord())
-      throw new IllegalArgumentException("Class need to be of record type.");
+    try {
+      if (isNotRecord(clazz))
+        throw recordRequiredException();
 
-    var ch = nextCharNonWhitespace();
-    if (ch != '{')
-      return null;
+      var ch = nextNonWhitespaceChar();
+      if (ch != '{')
+        throw invalidJSONException();
 
-    var map = readObject();
-    if (map.isEmpty())
-      return null;
-
-    return Records.fromMap(clazz, map);
+      return Records.fromMap(clazz, readObject());
+    } finally {
+      ex(reader::close);
+    }
   }
 
   public <T> List<T> toRecordList(Class<T> clazz) {
-    if (clazz == null || !clazz.isRecord())
-      throw new IllegalArgumentException("Class need to be of record type.");
+    try {
+      if (isNotRecord(clazz))
+        throw recordRequiredException();
 
-    var ch = nextCharNonWhitespace();
-    if (ch != '[')
-      return null;//NOSONAR
+      var ch = nextNonWhitespaceChar();
+      if (ch != '[')
+        return null;//NOSONAR
 
-    var list = new LinkedList<T>();
-    walkThroughJSONArray(o -> {
-      var map = (Map<String, Object>) o;
-      if (map == null || map.isEmpty())
-        return;
-      list.add(Records.fromMap(clazz, map));
-    });
+      var list = new LinkedList<T>();
+      walkThroughJSONArray(o -> {
+        var map = (Map<String, Object>) o;
+        if (isEmptyMap(map))
+          return;
+        list.add(Records.fromMap(clazz, map));
+      });
 
-    return list;
+      return list;
+    } finally {
+      ex(reader::close);
+    }
   }
 
   private Object readItem(Integer prev) {
-    var ch = prev != null ? prev : nextCharNonWhitespace();
+    var ch = prev != null ? prev : nextNonWhitespaceChar();
     return switch (ch) {
       case '"' -> readString();
       case '[' -> readArray();
@@ -119,7 +123,7 @@ public class JSONReader implements AutoCloseable {
     };
   }
 
-  private int nextCharNonWhitespace() {
+  private int nextNonWhitespaceChar() {
     var ch = nextChar();
     while (isWhitespace(ch)) {
       ch = nextChar();
@@ -135,7 +139,7 @@ public class JSONReader implements AutoCloseable {
     var builder = new StringBuilder();
     while (ch != -1 && ch != ',' && ch != '}' && ch != ']') {
       builder.append((char)ch);
-      ch = nextCharNonWhitespace();
+      ch = nextNonWhitespaceChar();
     }
     var s = builder.toString();
     if ("null".equalsIgnoreCase(s))
@@ -189,29 +193,45 @@ public class JSONReader implements AutoCloseable {
     var ch = nextChar();
     while (ch != -1 && ch != ']') {
       fn.accept(readItem(ch));
-      ch = nextCharNonWhitespace();
+      ch = nextNonWhitespaceChar();
       if (ch == ',')
-        ch = nextCharNonWhitespace();
+        ch = nextNonWhitespaceChar();
     }
   }
 
   private void walkThroughJSONObject(BiConsumer<String, Object> fn) {
-    var ch = nextCharNonWhitespace();
+    var ch = nextNonWhitespaceChar();
     while (ch != -1 && ch != '}') { //NOSONAR
       if (ch != '"')
-        break;
+        throw invalidJSONException();
 
       var prop = readString();
-      ch = nextCharNonWhitespace();
+      ch = nextNonWhitespaceChar();
       if (ch != ':')
-        break;
+        throw invalidJSONException();
 
       var value = readItem(null);
       fn.accept(prop, value);
 
-      ch = nextCharNonWhitespace();
+      ch = nextNonWhitespaceChar();
       if (ch == ',')
-        ch = nextCharNonWhitespace();
+        ch = nextNonWhitespaceChar();
     }
+  }
+
+  static IllegalStateException invalidJSONException() {
+    return new IllegalStateException("Not a JSON");
+  }
+
+  static IllegalArgumentException recordRequiredException() {
+    return new IllegalArgumentException("Class need to be of record type.");
+  }
+
+  static boolean isNotRecord(Class<?> clazz) {
+    return clazz == null || !clazz.isRecord();
+  }
+
+  static boolean isEmptyMap(Map<String, Object> map) {
+    return map == null || map.isEmpty();
   }
 }

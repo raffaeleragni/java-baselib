@@ -100,4 +100,10 @@ class RecordsTest {
     var expected = new SampleMoreNames(1, "test");
     assertThat(rec, is(expected));
   }
+
+  @Test
+  void testFromPropertyDiscoverNoLambda() {
+    var result = Records.fromPropertyDiscover(SampleMoreNames.class, null);
+    assertThat(result, is(nullValue()));
+  }
 }
